@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:47:47.954Z",
+  "updatedAt": "2026-06-01T04:48:24.884Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -110,10 +110,12 @@
       "id": "G010-regime-report",
       "title": "ETF multi-window regime report",
       "objective": "Generate ETF regime comparison report with required metrics and limitations.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:48:24.884Z",
+      "completedAt": "2026-06-01T04:48:24.884Z",
+      "evidence": "G010: ETF multi-window regime report includes sources, IC/net/MDD/turnover/quantiles, and limitations; pytest 30 passed"
     },
     {
       "id": "G011-autonomous-loop",
