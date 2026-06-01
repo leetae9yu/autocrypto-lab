@@ -93,6 +93,16 @@ def add_derivatives_pressure(rows: list[dict[str, Any]]) -> list[dict[str, Any]]
     return out
 
 
+def _normalize_lookback_params(params: dict[str, Any]) -> dict[str, Any]:
+    """Accept config-facing lookback aliases while calling fixed factor functions."""
+    normalized = dict(params)
+    if "lookback_periods" in normalized:
+        if "lookback" in normalized and normalized["lookback"] != normalized["lookback_periods"]:
+            raise ValueError("factor params cannot set conflicting lookback and lookback_periods")
+        normalized["lookback"] = normalized.pop("lookback_periods")
+    return normalized
+
+
 def apply_factor_dsl(rows: list[dict[str, Any]], specs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Apply declarative factor specs without allowing code mutation."""
     out = rows
@@ -100,11 +110,11 @@ def apply_factor_dsl(rows: list[dict[str, Any]], specs: list[dict[str, Any]]) ->
         name = spec["name"]
         params = dict(spec.get("params", {}))
         if name == "momentum":
-            out = add_momentum(out, **params)
+            out = add_momentum(out, **_normalize_lookback_params(params))
         elif name == "reversal":
-            out = add_reversal(out, **params)
+            out = add_reversal(out, **_normalize_lookback_params(params))
         elif name == "volatility":
-            out = add_volatility(out, **params)
+            out = add_volatility(out, **_normalize_lookback_params(params))
         elif name == "flow":
             out = add_flow(out)
         elif name == "derivatives_pressure":
