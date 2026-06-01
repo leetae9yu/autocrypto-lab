@@ -208,7 +208,7 @@ def test_generate_candidate_configs_includes_low_turnover_rebalance_templates():
 def test_generate_candidate_configs_includes_diverse_cpu_friendly_models():
     candidates = generate_candidate_configs(
         {"run_id": "base", "symbols": ["BTC", "ETH"], "interval": "1h", "factors": ["momentum", "volatility"]},
-        max_candidates=15,
+        max_candidates=17,
     )
     models = {candidate["config"]["model"] for candidate in candidates}
 
@@ -217,5 +217,32 @@ def test_generate_candidate_configs_includes_diverse_cpu_friendly_models():
     assert "walk_forward_extra_trees" in models
     assert "walk_forward_gradient_boosting" in models
     for candidate in candidates:
+        load_config(candidate["config"])
+
+
+def test_walk_forward_params_bumps_train_window_above_forward_horizon():
+    from autocrypto_lab.autonomous import _walk_forward_params
+
+    params = _walk_forward_params(
+        {"run_id": "base", "horizon_periods": 24, "model_params": {"train_periods": 24, "test_periods": 6}},
+        train_periods=168,
+        test_periods=24,
+        step_periods=None,
+    )
+
+    assert params["train_periods"] == 25
+    assert params["test_periods"] == 6
+
+
+def test_generate_candidate_configs_includes_selective_low_turnover_model_templates():
+    candidates = generate_candidate_configs(
+        {"run_id": "base", "symbols": ["BTC", "ETH"], "interval": "1h", "factors": ["momentum", "volatility"]},
+        max_candidates=17,
+    )
+    selective = [candidate for candidate in candidates if candidate["config"].get("model_params", {}).get("min_score_spread", 0.0) > 0.0]
+
+    assert {candidate["config"]["model"] for candidate in selective} >= {"walk_forward_gradient_boosting", "walk_forward_random_forest"}
+    assert all(candidate["config"]["model_params"]["backtest_rebalance_periods"] == 12 for candidate in selective)
+    for candidate in selective:
         load_config(candidate["config"])
 

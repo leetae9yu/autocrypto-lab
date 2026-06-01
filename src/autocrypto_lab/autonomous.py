@@ -145,6 +145,16 @@ def generate_candidate_configs(base_config: dict[str, Any], max_candidates: int 
                 "Gradient boosting tests a small boosted-tree ensemble for nonlinear factor interactions under the 8-hour turnover budget.",
                 {"model": "walk_forward_gradient_boosting", "horizon_periods": 8, "factors": base_factors, "model_params": {"train_periods": 168, "test_periods": 24, "backtest_rebalance_periods": 8, "n_estimators": 80, "learning_rate": 0.05, "max_depth": 2, "min_samples_leaf": 5, "random_state": 42}},
             ),
+            (
+                "gradient_boosting_selective_12h",
+                "Gradient boosting with a 12-hour rebalance and score-spread gate tests whether selective low-turnover trades improve cost-adjusted alpha.",
+                {"model": "walk_forward_gradient_boosting", "horizon_periods": 8, "factors": base_factors, "model_params": {"train_periods": 168, "test_periods": 24, "backtest_rebalance_periods": 12, "min_score_spread": 0.0075, "n_estimators": 80, "learning_rate": 0.05, "max_depth": 2, "min_samples_leaf": 5, "random_state": 42}},
+            ),
+            (
+                "random_forest_selective_12h",
+                "Random forest with a 12-hour rebalance and score-spread gate checks whether nonlinear signals survive costs with fewer trades.",
+                {"model": "walk_forward_random_forest", "horizon_periods": 8, "factors": base_factors, "model_params": {"train_periods": 168, "test_periods": 24, "backtest_rebalance_periods": 12, "min_score_spread": 0.0065, "n_estimators": 200, "max_depth": 4, "min_samples_leaf": 3, "random_state": 42, "n_jobs": 1}},
+            ),
         ]
     )
 
@@ -167,8 +177,11 @@ def generate_candidate_configs(base_config: dict[str, Any], max_candidates: int 
 
 def _walk_forward_params(config: dict[str, Any], train_periods: int, test_periods: int, step_periods: int | None) -> dict[str, int | None]:
     params = dict(config.get("model_params", {}))
+    requested_train_periods = int(params.get("train_periods", train_periods))
+    horizon_periods = int(config.get("horizon_periods", 1))
+    safe_train_periods = max(requested_train_periods, horizon_periods + 1)
     return {
-        "train_periods": int(params.get("train_periods", train_periods)),
+        "train_periods": safe_train_periods,
         "test_periods": int(params.get("test_periods", test_periods)),
         "step_periods": int(params.get("step_periods", step_periods)) if params.get("step_periods", step_periods) is not None else None,
     }
