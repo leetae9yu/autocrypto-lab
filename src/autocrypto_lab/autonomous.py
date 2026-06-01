@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import copy
+import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from autocrypto_lab.config import ALLOWED_CONFIG_KEYS, CPU_FRIENDLY_MODELS, load_config
 from autocrypto_lab.ledger import LedgerEntry, append_ledger
 from autocrypto_lab.manifest import stable_hash
+from autocrypto_lab.pipeline import run_public_binance_pipeline
 
 CONFIG_MUTATION_KEYS = set(ALLOWED_CONFIG_KEYS)
 
@@ -112,6 +115,74 @@ def generate_candidate_configs(base_config: dict[str, Any], max_candidates: int 
         load_config(config)
         candidates.append({"candidate_id": candidate_id, "hypothesis": hypothesis, "config": config})
     return candidates
+
+
+def _walk_forward_params(config: dict[str, Any], train_periods: int, test_periods: int, step_periods: int | None) -> dict[str, int | None]:
+    params = dict(config.get("model_params", {}))
+    return {
+        "train_periods": int(params.get("train_periods", train_periods)),
+        "test_periods": int(params.get("test_periods", test_periods)),
+        "step_periods": int(params.get("step_periods", step_periods)) if params.get("step_periods", step_periods) is not None else None,
+    }
+
+
+def evaluate_candidate_configs(
+    output_dir: Path,
+    base_config: dict[str, Any],
+    *,
+    start: datetime,
+    end: datetime,
+    adapter: Any | None = None,
+    max_candidates: int = 3,
+    train_periods: int = 24,
+    test_periods: int = 6,
+    step_periods: int | None = None,
+) -> dict[str, Any]:
+    """Evaluate generated candidates through the real public walk-forward pipeline."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    candidates = generate_candidate_configs(base_config, max_candidates=max_candidates)
+    evaluations: list[dict[str, Any]] = []
+    for candidate in candidates:
+        candidate_config = copy.deepcopy(candidate["config"])
+        candidate_dir = output_dir / candidate["candidate_id"]
+        wf_params = _walk_forward_params(candidate_config, train_periods, test_periods, step_periods)
+        outputs = run_public_binance_pipeline(
+            candidate_dir,
+            candidate_config,
+            start=start,
+            end=end,
+            adapter=adapter,
+            train_periods=int(wf_params["train_periods"] or train_periods),
+            test_periods=int(wf_params["test_periods"] or test_periods),
+            step_periods=wf_params["step_periods"],
+        )
+        metrics = json.loads(outputs["metrics"].read_text(encoding="utf-8"))
+        manifest = json.loads(outputs["manifest"].read_text(encoding="utf-8"))
+        evaluations.append(
+            {
+                "candidate_id": candidate["candidate_id"],
+                "hypothesis": candidate["hypothesis"],
+                "run_id": candidate_config["run_id"],
+                "config_hash": stable_hash(candidate_config),
+                "config": candidate_config,
+                "walk_forward": wf_params,
+                "output_dir": str(candidate_dir),
+                "artifact_paths": {name: str(path) for name, path in outputs.items()},
+                "artifact_lineage": manifest["source_metadata"]["artifact_lineage"],
+                "metrics": metrics,
+            }
+        )
+    summary = {
+        "base_run_id": str(base_config.get("run_id", "run")),
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "candidate_count": len(evaluations),
+        "evaluations": evaluations,
+    }
+    summary_path = output_dir / "candidate_evaluations.json"
+    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True, default=str), encoding="utf-8")
+    summary["summary_path"] = str(summary_path)
+    return summary
 
 
 def propose_config_variant(config: dict[str, Any], hypothesis: str) -> dict[str, Any]:

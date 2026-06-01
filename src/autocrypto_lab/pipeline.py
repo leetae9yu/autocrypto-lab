@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -381,6 +382,8 @@ def run_public_binance_pipeline(
     persisted_model = write_model_artifacts(model_dir, model, scored)
     metrics = run_signal_backtest(scored, fee_bps=cfg.fee_bps, slippage_bps=cfg.slippage_bps)
     metrics["factor_model"] = persisted_model.model_id
+    metrics_path = output_dir / "metrics.json"
+    metrics_path.write_text(json.dumps(metrics, indent=2, sort_keys=True, default=str), encoding="utf-8")
 
     report_path = output_dir / "report.md"
     regime_path = output_dir / "regime_report.md"
@@ -406,6 +409,7 @@ def run_public_binance_pipeline(
                 "model": str(model_dir / f"{persisted_model.model_id}.model.json"),
                 "signals": persisted_model.signal_output_path,
                 "feature_table": lineage["feature_table"].path,
+                "metrics": str(metrics_path),
             },
             source_metadata={
                 "source": "binance_usdm_public",
@@ -421,4 +425,4 @@ def run_public_binance_pipeline(
             },
         ),
     )
-    return {"report": report_path, "regime_report": regime_path, "dashboard": dashboard_path, "manifest": manifest_path, "model": model_dir / f"{persisted_model.model_id}.model.json", "signals": Path(persisted_model.signal_output_path), "feature_table": Path(lineage["feature_table"].path)}
+    return {"report": report_path, "regime_report": regime_path, "dashboard": dashboard_path, "manifest": manifest_path, "model": model_dir / f"{persisted_model.model_id}.model.json", "signals": Path(persisted_model.signal_output_path), "feature_table": Path(lineage["feature_table"].path), "metrics": metrics_path}

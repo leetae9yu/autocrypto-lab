@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T07:25:19.290Z",
-  "updatedAt": "2026-06-01T07:31:57.873Z",
+  "updatedAt": "2026-06-01T07:33:37.907Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -87,17 +87,23 @@
       "id": "G004-real-walk-forward-evaluator-loop",
       "title": "Real walk-forward candidate evaluator",
       "objective": "Wire candidate configs into the reusable public Binance/fake-adapter walk-forward evaluator and isolate artifacts by candidate run_id.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T07:25:19.290Z",
-      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "updatedAt": "2026-06-01T07:33:37.907Z",
       "commitIntent": "Evaluate autonomous candidates with walk-forward backtests",
       "acceptanceCriteria": [
         "Each candidate runs through the public-data walk-forward evaluator with isolated output directories.",
         "Fake adapter tests prove deterministic end-to-end evaluation without API keys.",
         "No candidate evaluation uses in-sample-only shortcuts."
       ],
-      "evidence": []
+      "evidence": [
+        "Added evaluate_candidate_configs to run generated configs through run_public_binance_pipeline with isolated candidate output directories.",
+        "Pipeline now persists metrics.json and returns metrics artifact path for evaluator summaries.",
+        "Fake adapter e2e test proves candidate evaluation runs without API keys and preserves walk-forward train/test scoring.",
+        "Verification: python3 -m pytest tests/test_autonomous_loop.py tests/test_public_binance_pipeline.py -q (11 passed); python3 -m pytest -q (83 passed); python3 -m compileall -q src tests."
+      ],
+      "completedAt": "2026-06-01T07:33:37.907Z"
     },
     {
       "id": "G005-autonomous-ledger-and-summary",

@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from autocrypto_lab.autonomous import config_diff, generate_candidate_configs, pareto_decision, propose_config_variant, run_autonomous_config_loop, run_dry_iteration
+from autocrypto_lab.autonomous import config_diff, evaluate_candidate_configs, generate_candidate_configs, pareto_decision, propose_config_variant, run_autonomous_config_loop, run_dry_iteration
 from autocrypto_lab.config import ALLOWED_CONFIG_KEYS, CPU_FRIENDLY_MODELS, load_config
 from autocrypto_lab.ledger import read_ledger
+from test_public_binance_pipeline import FakeBinanceAdapter, ts
 
 
 def test_propose_config_variant_only_changes_config():
@@ -62,6 +63,37 @@ def test_generate_candidate_configs_rejects_unknown_base_keys():
         assert "unknown config keys" in str(exc)
     else:
         raise AssertionError("unknown base config key was accepted")
+
+
+def test_evaluate_candidate_configs_runs_real_walk_forward_pipeline(tmp_path: Path):
+    summary = evaluate_candidate_configs(
+        tmp_path,
+        {
+            "run_id": "agent_eval",
+            "symbols": ["BTC", "ETH"],
+            "interval": "1h",
+            "factors": ["momentum", "derivatives_pressure"],
+        },
+        start=ts(0),
+        end=ts(3),
+        adapter=FakeBinanceAdapter(),
+        max_candidates=2,
+        train_periods=2,
+        test_periods=1,
+    )
+
+    assert summary["candidate_count"] == 2
+    assert Path(summary["summary_path"]).exists()
+    assert [row["candidate_id"] for row in summary["evaluations"]] == [
+        "candidate_001_weighted_score_baseline",
+        "candidate_002_equal_weight_robustness",
+    ]
+    for row in summary["evaluations"]:
+        assert Path(row["artifact_paths"]["manifest"]).exists()
+        assert Path(row["artifact_paths"]["metrics"]).exists()
+        assert row["artifact_lineage"]["model_artifact_id"]
+        assert row["metrics"]["factor_model"].startswith(row["run_id"])
+        assert row["walk_forward"] == {"train_periods": 2, "test_periods": 1, "step_periods": None}
 
 
 def test_dry_iteration_writes_required_ledger_fields(tmp_path: Path):
