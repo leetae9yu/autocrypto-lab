@@ -6,7 +6,7 @@ import pytest
 from autocrypto_lab.adapters import BinancePublicFuturesAdapter, FixtureMarketDataAdapter, MarketDataRequest, futures_symbol
 from autocrypto_lab.config import ConfigError
 from autocrypto_lab.data import load_ohlcv_csv
-from autocrypto_lab.storage import write_snapshot
+from autocrypto_lab.storage import write_public_normalized_artifact, write_public_raw_artifact, write_snapshot
 
 
 def test_public_request_validates_cadence_and_symbol():
@@ -92,3 +92,52 @@ def test_public_archive_metadata_contains_checksum_url():
     metadata = BinancePublicFuturesAdapter().public_archive_kline_metadata("BTC", "1h", "2024-01")
     assert metadata["url"].endswith("BTCUSDT-1h-2024-01.zip")
     assert metadata["checksum_url"].endswith(".CHECKSUM")
+
+
+def test_public_raw_artifact_records_endpoint_schema_and_retention(tmp_path: Path):
+    manifest = write_public_raw_artifact(
+        tmp_path,
+        source="binance_usdm_public",
+        endpoint="/futures/data/openInterestHist",
+        symbol="BTCUSDT",
+        interval_or_period="1h",
+        request_window={"start": "2024-01-01T00:00:00Z", "end": "2024-01-01T01:00:00Z"},
+        rows=[{"sumOpenInterest": "100", "timestamp": 1704067200000}],
+        retention_note="latest 1 month",
+        checksum_url="https://example.test/checksum",
+    )
+
+    assert manifest.layer == "raw"
+    assert manifest.endpoint == "/futures/data/openInterestHist"
+    assert manifest.row_count == 1
+    assert manifest.retention_note == "latest 1 month"
+    assert manifest.checksum_url.endswith("checksum")
+    assert Path(manifest.path).exists()
+    assert Path(manifest.path.replace(".json", ".manifest.json")).exists()
+
+
+def test_public_normalized_artifact_links_raw_ids(tmp_path: Path):
+    raw = write_public_raw_artifact(
+        tmp_path,
+        source="binance_usdm_public",
+        endpoint="/fapi/v1/fundingRate",
+        symbol="BTCUSDT",
+        interval_or_period="8h",
+        request_window={"start": 1, "end": 2},
+        rows=[{"fundingTime": 1, "fundingRate": "0.0001"}],
+    )
+    normalized = write_public_normalized_artifact(
+        tmp_path,
+        source="binance_usdm_public",
+        endpoint="/fapi/v1/fundingRate",
+        symbol="BTCUSDT",
+        interval_or_period="8h",
+        rows=[{"timestamp": "2024-01-01T00:00:00Z", "symbol": "BTCUSDT", "funding_rate": 0.0001}],
+        fieldnames=["timestamp", "symbol", "funding_rate"],
+        raw_artifact_ids=[raw.artifact_id],
+    )
+
+    assert normalized.layer == "normalized"
+    assert normalized.metadata["raw_artifact_ids"] == [raw.artifact_id]
+    assert normalized.content_hash
+    assert Path(normalized.path).read_text().splitlines()[0] == "timestamp,symbol,funding_rate"
