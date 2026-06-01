@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:41:18.439Z",
+  "updatedAt": "2026-06-01T04:42:01.401Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -22,10 +22,12 @@
       "id": "G002-safety-boundary",
       "title": "No-trade safety boundary first",
       "objective": "Implement restricted read-only adapter boundary and tests proving v1 exposes no order endpoints or trading-permission config.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:42:01.401Z",
+      "completedAt": "2026-06-01T04:42:01.401Z",
+      "evidence": "G002: read-only policy/adapter and no-trade safety tests; pytest 8 passed"
     },
     {
       "id": "G003-config-registry-ledger",

@@ -1,0 +1,58 @@
+"""Safety boundaries for v1: read-only market/account context, no execution."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Iterable
+
+FORBIDDEN_ORDER_TERMS = (
+    "create_order",
+    "cancel_order",
+    "place_order",
+    "market_order",
+    "limit_order",
+    "change_position",
+)
+
+
+class SafetyViolation(ValueError):
+    """Raised when config or adapter behavior crosses v1 safety boundaries."""
+
+
+@dataclass(frozen=True)
+class ReadOnlyExchangePolicy:
+    allow_private_read: bool = True
+    allow_trading: bool = False
+    minimum_cadence_minutes: int = 60
+
+    def validate(self) -> None:
+        if self.allow_trading:
+            raise SafetyViolation("v1 forbids trading-permission API usage and order endpoints")
+        if self.minimum_cadence_minutes < 60:
+            raise SafetyViolation("v1 forbids sub-hour scalping; cadence must be >= 60 minutes")
+
+
+class ReadOnlyAccountAdapter:
+    """Restricted account adapter shape for balance/position reads only."""
+
+    capability = "read_only"
+
+    def balances(self) -> dict[str, float]:
+        return {}
+
+    def positions(self) -> dict[str, float]:
+        return {}
+
+
+def assert_no_forbidden_adapter_methods(adapter: object) -> None:
+    names = set(dir(adapter))
+    unsafe = sorted(term for term in FORBIDDEN_ORDER_TERMS if term in names)
+    if unsafe:
+        raise SafetyViolation(f"unsafe order-like methods exposed: {unsafe}")
+
+
+def assert_no_forbidden_config_keys(keys: Iterable[str]) -> None:
+    lowered = {key.lower() for key in keys}
+    unsafe = sorted(term for term in FORBIDDEN_ORDER_TERMS if term in lowered)
+    if unsafe:
+        raise SafetyViolation(f"unsafe trading config keys are forbidden in v1: {unsafe}")
