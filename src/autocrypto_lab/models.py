@@ -98,6 +98,99 @@ def score_model(rows: list[dict[str, Any]], model: FactorModelArtifact) -> list[
     return out
 
 
+def fit_walk_forward_weighted_score_model(
+    rows: list[dict[str, Any]],
+    *,
+    features: list[str],
+    target: str = "forward_return",
+    model_id: str = "walk_forward_weighted_score_v1",
+    train_periods: int = 24,
+    test_periods: int = 6,
+    step_periods: int | None = None,
+) -> tuple[FactorModelArtifact, list[dict[str, Any]]]:
+    """Fit factor weights on rolling train windows and score only later test windows."""
+    if train_periods < 1 or test_periods < 1:
+        raise ValueError("walk-forward train_periods and test_periods must be positive")
+    step = step_periods or test_periods
+    if step < 1:
+        raise ValueError("walk-forward step_periods must be positive")
+    timestamps = sorted({row["timestamp"] for row in rows})
+    fold_start = 0
+    fold_idx = 0
+    scored_rows: list[dict[str, Any]] = []
+    folds: list[dict[str, Any]] = []
+    fold_weights: list[dict[str, float]] = []
+    while fold_start + train_periods + test_periods <= len(timestamps):
+        train_ts = timestamps[fold_start: fold_start + train_periods]
+        test_ts = timestamps[fold_start + train_periods: fold_start + train_periods + test_periods]
+        train_end = train_ts[-1]
+        train_set = set(train_ts)
+        test_set = set(test_ts)
+        train_rows = [
+            row
+            for row in rows
+            if row["timestamp"] in train_set
+            and row.get("label_available", True)
+            and row.get("label_timestamp", row["timestamp"]) <= train_end
+        ]
+        test_rows = [row for row in rows if row["timestamp"] in test_set]
+        if train_rows and test_rows:
+            fold_model = fit_weighted_score_model(train_rows, features=features, target=target, model_id=f"{model_id}_fold_{fold_idx}")
+            fold_weights.append(fold_model.weights)
+            for scored in score_model(test_rows, fold_model):
+                scored_rows.append(
+                    {
+                        **scored,
+                        "model_id": model_id,
+                        "walk_forward_fold": fold_idx,
+                        "train_start": train_ts[0],
+                        "train_end": train_ts[-1],
+                        "test_start": test_ts[0],
+                        "test_end": test_ts[-1],
+                    }
+                )
+            folds.append(
+                {
+                    "fold": fold_idx,
+                    "train_start": train_ts[0],
+                    "train_end": train_ts[-1],
+                    "test_start": test_ts[0],
+                    "test_end": test_ts[-1],
+                    "n_train": len(train_rows),
+                    "n_test": len(test_rows),
+                    "weights": fold_model.weights,
+                }
+            )
+            fold_idx += 1
+        fold_start += step
+    if not scored_rows:
+        raise ValueError("walk-forward configuration produced no scored out-of-sample rows")
+    average_weights = {
+        feature: mean([weights.get(feature, 0.0) for weights in fold_weights])
+        for feature in features
+    }
+    train_window = {"start": folds[0]["train_start"], "end": folds[-1]["train_end"]}
+    eval_window = {"start": folds[0]["test_start"], "end": folds[-1]["test_end"]}
+    artifact = FactorModelArtifact(
+        model_id=model_id,
+        model_type="walk_forward_weighted_score",
+        features=list(features),
+        weights=average_weights,
+        train_window=train_window,
+        eval_window=eval_window,
+        input_hash=stable_hash({"rows": rows, "features": features, "train_periods": train_periods, "test_periods": test_periods, "step_periods": step}),
+        metrics={
+            "walk_forward": True,
+            "train_periods": train_periods,
+            "test_periods": test_periods,
+            "step_periods": step,
+            "folds": folds,
+            "n_scored": len(scored_rows),
+        },
+    )
+    return artifact.with_outputs(""), sorted(scored_rows, key=lambda row: (row["timestamp"], row["symbol"]))
+
+
 def write_model_artifacts(root: Path, model: FactorModelArtifact, scored_rows: list[dict[str, Any]]) -> FactorModelArtifact:
     root.mkdir(parents=True, exist_ok=True)
     signal_path = root / f"{model.model_id}_signals.json"

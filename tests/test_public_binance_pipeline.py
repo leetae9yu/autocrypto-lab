@@ -50,6 +50,8 @@ def test_public_binance_pipeline_downloads_normalizes_and_backtests(tmp_path: Pa
         start=ts(0),
         end=ts(3),
         adapter=FakeBinanceAdapter(),
+        train_periods=2,
+        test_periods=1,
     )
 
     assert outputs["report"].exists()
@@ -58,9 +60,15 @@ def test_public_binance_pipeline_downloads_normalizes_and_backtests(tmp_path: Pa
     assert outputs["feature_table"].exists()
     manifest = json.loads(outputs["manifest"].read_text())
     assert manifest["source_metadata"]["source"] == "binance_usdm_public"
+    assert manifest["source_metadata"]["walk_forward"] == {"train_periods": 2, "test_periods": 1, "step_periods": 1}
     lineage = manifest["source_metadata"]["artifact_lineage"]
     assert len(lineage["raw_data_snapshot_ids"]) == 8
     assert len(lineage["normalized_data_snapshot_ids"]) == 4
     assert lineage["feature_table_id"]
     assert lineage["model_artifact_id"]
     assert lineage["signal_artifact_id"]
+    model = json.loads(outputs["model"].read_text())
+    assert model["model_type"] == "walk_forward_weighted_score"
+    assert model["metrics"]["walk_forward"] is True
+    signals = json.loads(outputs["signals"].read_text())
+    assert signals and all(row["test_start"] > row["train_end"] for row in signals)

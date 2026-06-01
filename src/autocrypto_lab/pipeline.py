@@ -12,7 +12,7 @@ from autocrypto_lab.config import load_config
 from autocrypto_lab.data import load_ohlcv_csv
 from autocrypto_lab.factors import add_forward_returns, apply_factor_dsl, build_public_futures_feature_table
 from autocrypto_lab.manifest import RunManifest, stable_hash, write_manifest
-from autocrypto_lab.models import fit_weighted_score_model, score_model, write_model_artifacts
+from autocrypto_lab.models import fit_walk_forward_weighted_score_model, fit_weighted_score_model, score_model, write_model_artifacts
 from autocrypto_lab.pit import validate_feature_label_order
 from autocrypto_lab.report import write_markdown_report
 from autocrypto_lab.regime import write_regime_report
@@ -313,6 +313,9 @@ def run_public_binance_pipeline(
     start: datetime,
     end: datetime,
     adapter: BinancePublicFuturesAdapter | None = None,
+    train_periods: int = 12,
+    test_periods: int = 6,
+    step_periods: int | None = None,
 ) -> dict[str, Path]:
     cfg = load_config({**raw_config, "public_only": True, "allow_private_read": False})
     adapter = adapter or BinancePublicFuturesAdapter()
@@ -364,8 +367,14 @@ def run_public_binance_pipeline(
         featured,
         {"source": "binance_usdm_public", "start": start.isoformat(), "end": end.isoformat(), "interval": cfg.interval},
     )
-    model = fit_weighted_score_model(featured, features=[spec["name"] for spec in features], model_id=f"{cfg.run_id}_weighted_score")
-    scored = score_model(featured, model)
+    model, scored = fit_walk_forward_weighted_score_model(
+        featured,
+        features=[spec["name"] for spec in features],
+        model_id=f"{cfg.run_id}_walk_forward_weighted_score",
+        train_periods=train_periods,
+        test_periods=test_periods,
+        step_periods=step_periods,
+    )
     model_dir = output_dir / "models"
     persisted_model = write_model_artifacts(model_dir, model, scored)
     metrics = run_signal_backtest(scored, fee_bps=cfg.fee_bps, slippage_bps=cfg.slippage_bps)
@@ -375,7 +384,7 @@ def run_public_binance_pipeline(
     regime_path = output_dir / "regime_report.md"
     dashboard_path = output_dir / "dashboard.html"
     manifest_path = output_dir / "manifest.json"
-    write_markdown_report(report_path, cfg.run_id, metrics, limitations=["Live Binance public-data pull; results are research diagnostics, not investment advice or a production strategy."])
+    write_markdown_report(report_path, cfg.run_id, metrics, limitations=["Live Binance public-data pull with walk-forward train/test splits; results are research diagnostics, not investment advice or a production strategy."])
     write_regime_report(regime_path, scored, factor="signal_score")
     write_dashboard(dashboard_path, [report_path, regime_path, Path(persisted_model.signal_output_path)], output_dir / "ledger.jsonl")
     artifact_lineage = {
@@ -402,6 +411,7 @@ def run_public_binance_pipeline(
                 "interval": cfg.interval,
                 "start": start.isoformat(),
                 "end": end.isoformat(),
+                "walk_forward": {"train_periods": train_periods, "test_periods": test_periods, "step_periods": step_periods or test_periods},
                 "factor_specs": features,
                 "public_only": True,
                 "artifact_lineage": artifact_lineage,

@@ -39,6 +39,9 @@ def build_parser() -> argparse.ArgumentParser:
     live_public.add_argument("--start", help="UTC ISO start, e.g. 2026-05-30T00:00:00Z. Defaults to now-lookback-hours.")
     live_public.add_argument("--end", help="UTC ISO end, e.g. 2026-06-01T00:00:00Z. Defaults to now.")
     live_public.add_argument("--lookback-hours", type=int, default=72, help="Used when --start is omitted.")
+    live_public.add_argument("--train-periods", type=int, default=12, help="Walk-forward train window length in interval periods.")
+    live_public.add_argument("--test-periods", type=int, default=6, help="Walk-forward out-of-sample test window length in interval periods.")
+    live_public.add_argument("--step-periods", type=int, help="Walk-forward step length in interval periods. Defaults to test-periods.")
 
     return parser
 
@@ -82,6 +85,9 @@ def main(argv: list[str] | None = None) -> int:
             },
             start=start,
             end=end,
+            train_periods=args.train_periods,
+            test_periods=args.test_periods,
+            step_periods=args.step_periods,
         )
         for name, path in outputs.items():
             print(f"{name}: {path}")

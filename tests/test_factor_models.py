@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from autocrypto_lab.factors import build_public_futures_feature_table
-from autocrypto_lab.models import fit_weighted_score_model, score_model, write_model_artifacts
+from autocrypto_lab.models import fit_walk_forward_weighted_score_model, fit_weighted_score_model, score_model, write_model_artifacts
 
 
 def ts(hour: int):
@@ -54,3 +54,22 @@ def test_model_artifact_hash_is_deterministic_for_same_inputs():
     first = fit_weighted_score_model(rows, features=["momentum", "derivatives_pressure"], model_id="stable_model")
     second = fit_weighted_score_model(rows, features=["momentum", "derivatives_pressure"], model_id="stable_model")
     assert first.artifact_hash == second.artifact_hash
+
+
+def test_walk_forward_model_scores_only_out_of_sample_windows():
+    rows = feature_rows()
+    model, scored = fit_walk_forward_weighted_score_model(
+        rows,
+        features=["momentum", "derivatives_pressure"],
+        model_id="wf_model",
+        train_periods=2,
+        test_periods=1,
+    )
+
+    assert model.model_type == "walk_forward_weighted_score"
+    assert model.metrics["walk_forward"] is True
+    assert model.metrics["folds"]
+    assert model.metrics["folds"][0]["n_train"] == 2
+    assert scored
+    assert all(row["model_id"] == "wf_model" for row in scored)
+    assert all(row["test_start"] > row["train_end"] for row in scored)

@@ -56,10 +56,12 @@ PYTHONPATH=src python3 -m autocrypto_lab.cli run-public-binance \
   --run-id real_binance_smoke \
   --symbols BTC,ETH \
   --interval 1h \
-  --lookback-hours 12
+  --lookback-hours 72 \
+  --train-periods 24 \
+  --test-periods 6
 ```
 
-This command downloads public klines, funding rates, open-interest statistics, and basis data, persists raw/normalized artifacts, builds a PIT feature table, fits the weighted-score factor model, persists `model_id`/`signal_score` artifacts, and runs the cost-aware signal backtest. It does **not** use API keys and does **not** place or modify trades.
+This command downloads public klines, funding rates, open-interest statistics, and basis data, persists raw/normalized artifacts, builds a PIT feature table, fits rolling walk-forward weighted-score factor models, persists out-of-sample `model_id`/`signal_score` artifacts, and runs the cost-aware signal backtest. It does **not** use API keys and does **not** place or modify trades.
 
 ## Planning artifacts
 
