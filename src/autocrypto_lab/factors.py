@@ -114,6 +114,46 @@ def apply_factor_dsl(rows: list[dict[str, Any]], specs: list[dict[str, Any]]) ->
     return out
 
 
+def _latest_known(rows: list[dict[str, Any]], symbol: str, timestamp: Any) -> dict[str, Any]:
+    candidates = [row for row in rows if row.get("symbol") == symbol and row.get("timestamp") <= timestamp]
+    if not candidates:
+        return {}
+    return max(candidates, key=lambda row: row["timestamp"])
+
+
+def build_public_futures_feature_table(
+    klines: list[dict[str, Any]],
+    funding: list[dict[str, Any]],
+    open_interest: list[dict[str, Any]],
+    basis: list[dict[str, Any]],
+    *,
+    horizon: int = 1,
+    factor_specs: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Join public futures sources by known-at timestamp and add model-ready factors."""
+    base = []
+    for row in sorted(klines, key=lambda item: (item["symbol"], item["timestamp"])):
+        symbol = row["symbol"]
+        timestamp = row["timestamp"]
+        f = _latest_known(funding, symbol, timestamp)
+        oi = _latest_known(open_interest, symbol, timestamp)
+        b = _latest_known(basis, symbol, timestamp)
+        enriched = dict(row)
+        enriched["known_at"] = timestamp
+        enriched["funding_rate"] = float(f.get("funding_rate", 0.0))
+        enriched["open_interest"] = float(oi.get("open_interest", 0.0))
+        enriched["spot_future_basis"] = float(b.get("spot_future_basis", b.get("basis", 0.0)))
+        enriched["source_known_at"] = {
+            "kline": timestamp,
+            "funding": f.get("timestamp"),
+            "open_interest": oi.get("timestamp"),
+            "basis": b.get("timestamp"),
+        }
+        base.append(enriched)
+    featured = apply_factor_dsl(base, factor_specs or [{"name": "momentum"}, {"name": "volatility"}, {"name": "derivatives_pressure"}])
+    return add_forward_returns(featured, horizon=horizon)
+
+
 for _name, _fn in {
     "reversal": add_reversal,
     "volatility": add_volatility,
