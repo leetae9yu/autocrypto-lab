@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:44:34.475Z",
+  "updatedAt": "2026-06-01T04:45:15.615Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -55,10 +55,12 @@
       "id": "G005-data-adapter-storage",
       "title": "Public/free data adapter contracts and local storage snapshots",
       "objective": "Define public data adapter interfaces and local snapshot contracts for BTC/ETH/SOL/XRP with cadence >=1h validation.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:45:15.615Z",
+      "completedAt": "2026-06-01T04:45:15.615Z",
+      "evidence": "G005: public/free adapter contracts and local snapshot manifest storage; pytest 18 passed"
     },
     {
       "id": "G006-factor-dsl-families",
