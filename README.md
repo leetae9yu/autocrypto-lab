@@ -31,6 +31,21 @@ Expected smoke artifacts:
 - `/tmp/autocrypto-smoke/dashboard.html`
 - `/tmp/autocrypto-smoke/manifest.json`
 
+The next-phase public-futures fixture replay exercises the API-key-free model path:
+
+```bash
+PYTHONPATH=src python3 -m autocrypto_lab.cli run-public-fixture --output-dir /tmp/autocrypto-public-smoke --run-id public_smoke
+```
+
+Expected public fixture artifacts:
+
+- `/tmp/autocrypto-public-smoke/report.md`
+- `/tmp/autocrypto-public-smoke/regime_report.md`
+- `/tmp/autocrypto-public-smoke/dashboard.html`
+- `/tmp/autocrypto-public-smoke/manifest.json`
+- `/tmp/autocrypto-public-smoke/models/public_smoke_weighted_score.model.json`
+- `/tmp/autocrypto-public-smoke/models/public_smoke_weighted_score_signals.json`
+
 The sample path uses deterministic fixtures under `tests/fixtures/` so CI does not need network access or credentials.
 
 ## Planning artifacts

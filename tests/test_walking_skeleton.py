@@ -1,7 +1,7 @@
 from pathlib import Path
 import json
 
-from autocrypto_lab.pipeline import run_fixture_pipeline
+from autocrypto_lab.pipeline import run_fixture_pipeline, run_public_fixture_pipeline
 from autocrypto_lab.report import DISCLAIMER
 
 
@@ -48,3 +48,18 @@ def test_cli_run_sample(tmp_path: Path, capsys):
     assert (tmp_path / "report.md").exists()
     assert (tmp_path / "regime_report.md").exists()
     assert (tmp_path / "dashboard.html").exists()
+
+
+def test_public_fixture_pipeline_outputs_model_signal_artifacts(tmp_path: Path):
+    outputs = run_public_fixture_pipeline(
+        Path("tests/fixtures/ohlcv_1h.csv"),
+        tmp_path,
+        {"run_id": "public_pytest", "symbols": ["BTC", "ETH"], "interval": "1h", "factors": ["momentum", "volatility", "derivatives_pressure"]},
+    )
+    assert outputs["model"].exists()
+    assert outputs["signals"].exists()
+    report = outputs["report"].read_text()
+    manifest = json.loads(outputs["manifest"].read_text())
+    assert "public_pytest_weighted_score" in report
+    assert manifest["source_metadata"]["public_only"] is True
+    assert "model" in manifest["artifact_paths"]

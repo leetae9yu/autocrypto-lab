@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T05:51:26.521Z",
-  "updatedAt": "2026-06-01T05:59:02.964276Z",
+  "updatedAt": "2026-06-01T06:00:19.510137Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -88,10 +88,12 @@
       "id": "G008-cli-docs-e2e",
       "title": "CLI, docs, reports, and fixture e2e",
       "objective": "Expose fixture/replay-first CLI vertical slice and documentation for public-data no-key scope, limitations, generated reports, and dashboard artifacts.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:51:47.640988Z"
+      "updatedAt": "2026-06-01T06:00:19.510137Z",
+      "completedAt": "2026-06-01T06:00:19.510137Z",
+      "evidence": "G008: run-public-fixture CLI produces report/regime/dashboard/manifest/model/signals using public-only model-signal pipeline; pytest 62 passed; public smoke generated artifacts; compileall pass"
     },
     {
       "id": "G009-final-quality-gate",
