@@ -47,3 +47,10 @@ def test_model_artifacts_are_persisted_with_signal_output(tmp_path: Path):
     assert Path(persisted.signal_output_path).exists()
     assert (tmp_path / "persisted_model.model.json").exists()
     assert "artifact_hash" in (tmp_path / "persisted_model.model.json").read_text()
+
+
+def test_model_artifact_hash_is_deterministic_for_same_inputs():
+    rows = feature_rows()
+    first = fit_weighted_score_model(rows, features=["momentum", "derivatives_pressure"], model_id="stable_model")
+    second = fit_weighted_score_model(rows, features=["momentum", "derivatives_pressure"], model_id="stable_model")
+    assert first.artifact_hash == second.artifact_hash

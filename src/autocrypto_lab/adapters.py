@@ -77,8 +77,9 @@ class PublicFuturesRequest:
 
     @property
     def url(self) -> str:
-        assert_public_route("GET", self.endpoint)
-        return f"{BINANCE_USDM_BASE_URL}{self.endpoint}?{urlencode(self.params)}"
+        query = urlencode(self.params)
+        assert_public_route("GET", f"{self.endpoint}?{query}")
+        return f"{BINANCE_USDM_BASE_URL}{self.endpoint}?{query}"
 
 
 class HTTPClient(Protocol):

@@ -55,11 +55,11 @@ def run_dry_iteration(
     candidate: dict[str, float],
     hypothesis: str,
     *,
-    artifact_ids: dict[str, Any] | None = None,
+    artifact_ids: dict[str, Any],
 ) -> dict[str, Any]:
     variant = propose_config_variant(config, hypothesis)
     decision = pareto_decision(candidate, baseline)
-    artifacts = artifact_ids or {}
+    artifacts = artifact_ids
     entry = LedgerEntry(
         run_id=variant["run_id"],
         hypothesis=hypothesis,

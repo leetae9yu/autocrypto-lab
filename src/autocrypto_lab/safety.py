@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Iterable
+from urllib.parse import parse_qsl, urlsplit
 
 FORBIDDEN_ORDER_TERMS = (
     "create_order",
@@ -16,7 +17,12 @@ FORBIDDEN_ORDER_TERMS = (
 
 FORBIDDEN_PRIVATE_TERMS = (
     "api_key",
+    "api-key",
+    "apikey",
     "api_secret",
+    "api-secret",
+    "apisecret",
+    "secret",
     "secret_key",
     "signature",
     "signed",
@@ -40,6 +46,20 @@ FORBIDDEN_ROUTE_FRAGMENTS = (
 )
 
 FORBIDDEN_HTTP_METHODS = ("POST", "DELETE")
+PUBLIC_BINANCE_ENDPOINT_ALLOWLIST = {
+    "/fapi/v1/klines",
+    "/fapi/v1/fundingRate",
+    "/futures/data/openInterestHist",
+    "/futures/data/basis",
+}
+FORBIDDEN_QUERY_KEYS = {
+    "apikey",
+    "api_key",
+    "api-secret",
+    "api_secret",
+    "secret",
+    "signature",
+}
 
 
 class SafetyViolation(ValueError):
@@ -92,10 +112,18 @@ def assert_public_route(method: str, path: str, headers: dict[str, str] | None =
     normalized_method = method.upper()
     if normalized_method in FORBIDDEN_HTTP_METHODS:
         raise SafetyViolation(f"public-only phase forbids exchange HTTP {normalized_method} actions")
-    lower_path = path.lower()
+    parsed = urlsplit(path)
+    endpoint = parsed.path or path.split("?", 1)[0]
+    lower_path = endpoint.lower()
     unsafe_routes = [fragment for fragment in FORBIDDEN_ROUTE_FRAGMENTS if fragment.lower() in lower_path]
     if unsafe_routes:
         raise SafetyViolation(f"public-only phase forbids private/signed route fragments: {unsafe_routes}")
+    if endpoint not in PUBLIC_BINANCE_ENDPOINT_ALLOWLIST:
+        raise SafetyViolation(f"public-only phase allows only approved public endpoints: {endpoint}")
+    query_keys = {key.lower() for key, _ in parse_qsl(parsed.query, keep_blank_values=True)}
+    unsafe_query_keys = sorted(key for key in query_keys if key in FORBIDDEN_QUERY_KEYS)
+    if unsafe_query_keys:
+        raise SafetyViolation(f"public-only phase forbids signed/private query keys: {unsafe_query_keys}")
     header_names = {name.lower() for name in (headers or {})}
     unsafe_headers = sorted(name for name in header_names if name in {"x-mbx-apikey", "authorization"})
     if unsafe_headers:

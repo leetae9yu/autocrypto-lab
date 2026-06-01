@@ -31,6 +31,7 @@ class LedgerEntry:
 
     def validate(self) -> None:
         missing = [name for name in ("run_id", "hypothesis", "config_hash", "config_diff", "config_snapshot", "rationale", "decision", "evidence") if not getattr(self, name)]
+        missing.extend(name for name in ("raw_data_snapshot_ids", "normalized_data_snapshot_ids", "feature_table_id", "model_artifact_id", "signal_artifact_id") if not getattr(self, name))
         if missing:
             raise ValueError(f"ledger entry missing required fields: {missing}")
         if self.decision not in ("continue", "adopt", "defer", "stop"):

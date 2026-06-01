@@ -3,9 +3,10 @@ from datetime import datetime, timezone, timedelta
 
 import pytest
 
-from autocrypto_lab.adapters import BinancePublicFuturesAdapter, FixtureMarketDataAdapter, MarketDataRequest, futures_symbol
+from autocrypto_lab.adapters import BinancePublicFuturesAdapter, FixtureMarketDataAdapter, MarketDataRequest, PublicFuturesRequest, futures_symbol
 from autocrypto_lab.config import ConfigError
 from autocrypto_lab.data import load_ohlcv_csv
+from autocrypto_lab.safety import SafetyViolation
 from autocrypto_lab.storage import write_public_normalized_artifact, write_public_raw_artifact, write_snapshot
 
 
@@ -86,6 +87,12 @@ def test_binance_public_fetch_uses_no_auth_headers():
     result = adapter.fetch(adapter.open_interest_request("BTC"))
     assert result == [{"ok": True}]
     assert calls[0][1] == {}
+
+
+def test_public_futures_request_rejects_signed_query_params():
+    request = PublicFuturesRequest(endpoint="/fapi/v1/klines", params={"symbol": "BTCUSDT", "interval": "1h", "signature": "bad"}, limit=1500)
+    with pytest.raises(SafetyViolation, match="query keys"):
+        _ = request.url
 
 
 def test_public_archive_metadata_contains_checksum_url():

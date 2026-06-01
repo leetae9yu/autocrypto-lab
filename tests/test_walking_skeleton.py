@@ -63,3 +63,10 @@ def test_public_fixture_pipeline_outputs_model_signal_artifacts(tmp_path: Path):
     assert "public_pytest_weighted_score" in report
     assert manifest["source_metadata"]["public_only"] is True
     assert "model" in manifest["artifact_paths"]
+    assert outputs["feature_table"].exists()
+    lineage = manifest["source_metadata"]["artifact_lineage"]
+    assert len(lineage["raw_data_snapshot_ids"]) == 4
+    assert len(lineage["normalized_data_snapshot_ids"]) == 4
+    assert lineage["feature_table_id"]
+    assert lineage["model_artifact_id"]
+    assert lineage["signal_artifact_id"]

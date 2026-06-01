@@ -73,3 +73,19 @@ def test_public_futures_feature_table_does_not_use_future_funding():
     )
     assert rows[0]["funding_rate"] == 0.0
     assert rows[0]["source_known_at"]["funding"] is None
+
+
+def test_public_futures_feature_table_respects_source_known_at():
+    klines = [
+        {"timestamp": ts(1), "symbol": "SOLUSDT", "open": 10.0, "high": 11.0, "low": 9.0, "close": 10.0, "volume": 1.0},
+        {"timestamp": ts(2), "symbol": "SOLUSDT", "open": 10.0, "high": 12.0, "low": 10.0, "close": 11.0, "volume": 1.0},
+    ]
+    rows = build_public_futures_feature_table(
+        klines,
+        funding=[{"timestamp": ts(0), "known_at": ts(2), "symbol": "SOLUSDT", "funding_rate": 0.123}],
+        open_interest=[],
+        basis=[],
+    )
+    assert rows[0]["funding_rate"] == 0.0
+    assert rows[1]["funding_rate"] == 0.123
+    assert rows[1]["source_known_at"]["funding"] == ts(2)

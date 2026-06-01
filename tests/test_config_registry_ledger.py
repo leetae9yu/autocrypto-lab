@@ -38,6 +38,10 @@ def test_public_only_config_rejects_private_reads_and_credentials():
         load_config({"run_id": "bad", "public_only": True})
     with pytest.raises(Exception, match="private"):
         load_config({"run_id": "bad", "metadata": {"api_key": "nope"}})
+    with pytest.raises(Exception, match="private"):
+        load_config({"run_id": "bad", "public_only": True, "allow_private_read": False, "api_key": "nope"})
+    with pytest.raises(ConfigError, match="unknown config keys"):
+        load_config({"run_id": "bad", "public_only": True, "allow_private_read": False, "surprise": "nope"})
 
 
 def test_registry_rejects_duplicate_and_unknown():
@@ -71,3 +75,20 @@ def test_ledger_roundtrip(tmp_path: Path):
     rows = read_ledger(path)
     assert rows[0]["hypothesis"] == "momentum survives costs"
     assert rows[0]["decision"] == "continue"
+
+
+def test_ledger_requires_artifact_provenance(tmp_path: Path):
+    path = tmp_path / "ledger.jsonl"
+    entry = LedgerEntry(
+        run_id="r1",
+        hypothesis="missing provenance should fail",
+        config_hash=stable_hash({"run_id": "r1"}),
+        config_diff={"run_id": {"before": "base", "after": "r1"}},
+        config_snapshot={"run_id": "r1"},
+        rationale="fixture smoke",
+        metrics={"net_return": 0.01},
+        decision="continue",
+        evidence="pytest fixture",
+    )
+    with pytest.raises(ValueError, match="raw_data_snapshot_ids"):
+        append_ledger(path, entry)

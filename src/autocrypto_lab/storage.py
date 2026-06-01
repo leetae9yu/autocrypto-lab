@@ -112,7 +112,7 @@ def write_public_raw_artifact(
         checksum_url=checksum_url,
         metadata=metadata or {},
     )
-    (root / f"{stem}.manifest.json").write_text(json.dumps(asdict(manifest), indent=2, sort_keys=True), encoding="utf-8")
+    (root / f"{stem}.manifest.json").write_text(json.dumps(asdict(manifest), indent=2, sort_keys=True, default=str), encoding="utf-8")
     return manifest
 
 
@@ -151,5 +151,5 @@ def write_public_normalized_artifact(
         retention_note=retention_note,
         metadata={**(metadata or {}), "raw_artifact_ids": raw_artifact_ids},
     )
-    (root / f"{stem}.manifest.json").write_text(json.dumps(asdict(manifest), indent=2, sort_keys=True), encoding="utf-8")
+    (root / f"{stem}.manifest.json").write_text(json.dumps(asdict(manifest), indent=2, sort_keys=True, default=str), encoding="utf-8")
     return manifest

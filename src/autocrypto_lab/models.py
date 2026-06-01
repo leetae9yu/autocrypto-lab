@@ -26,10 +26,22 @@ class FactorModelArtifact:
     artifact_hash: str = ""
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
+    def deterministic_payload(self) -> dict[str, Any]:
+        return {
+            "model_id": self.model_id,
+            "model_type": self.model_type,
+            "features": self.features,
+            "weights": self.weights,
+            "train_window": self.train_window,
+            "eval_window": self.eval_window,
+            "input_hash": self.input_hash,
+            "metrics": self.metrics,
+        }
+
     def with_outputs(self, signal_output_path: str) -> "FactorModelArtifact":
         payload = asdict(self)
         payload["signal_output_path"] = signal_output_path
-        payload["artifact_hash"] = stable_hash({**payload, "artifact_hash": ""})
+        payload["artifact_hash"] = stable_hash(self.deterministic_payload())
         return FactorModelArtifact(**payload)
 
 

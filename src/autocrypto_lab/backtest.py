@@ -60,8 +60,14 @@ def run_long_short(rows: list[dict[str, Any]], factor: str, fee_bps: float = 5.0
 
 
 def run_signal_backtest(rows: list[dict[str, Any]], *, score_field: str = "signal_score", fee_bps: float = 5.0, slippage_bps: float = 2.0, funding_cost: float = 0.0) -> dict[str, Any]:
-    if not rows or score_field not in rows[0]:
+    if not rows:
         raise ValueError("model-signal backtest requires persisted signal_score rows")
+    missing_scores = [idx for idx, row in enumerate(rows) if score_field not in row]
+    if missing_scores:
+        raise ValueError(f"model-signal backtest requires {score_field} on every row; missing rows: {missing_scores[:5]}")
+    model_ids = {str(row.get("model_id", "")) for row in rows}
+    if len(model_ids) != 1 or "" in model_ids:
+        raise ValueError("model-signal backtest requires a consistent non-empty model_id on every row")
     metrics = run_long_short(rows, factor=score_field, fee_bps=fee_bps, slippage_bps=slippage_bps)
     metrics["score_field"] = score_field
     metrics["model_id"] = next((row.get("model_id") for row in rows if row.get("model_id")), "unknown")

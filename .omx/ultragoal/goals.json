@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T05:51:26.521Z",
-  "updatedAt": "2026-06-01T06:00:19.510137Z",
+  "updatedAt": "2026-06-01T06:15:59.886739Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -99,10 +99,12 @@
       "id": "G009-final-quality-gate",
       "title": "Final verification, cleanup, review, and push",
       "objective": "Run full deterministic verification, no-trade/no-signed-route scan, ai-slop-cleaner report, code-review APPROVE/CLEAR, commit final checkpoint, and push origin main.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:51:47.640988Z"
+      "updatedAt": "2026-06-01T06:15:59.886739Z",
+      "completedAt": "2026-06-01T06:15:59.886739Z",
+      "evidence": "G009: final quality gate passed; pytest 67 passed; public fixture and legacy sample CLI smoke generated artifacts; compileall pass; no-trade/no-signed-route scan pass; ai-slop-cleaner pass; code-review APPROVE; architect CLEAR; final quality gate recorded in docs/final-quality-gate.md and .omx/ultragoal/final-quality-gate.json"
     }
   ],
   "codexObjective": "Complete the durable ultragoal plan in .omx/ultragoal/goals.json for the public futures factor autonomy phase; use .omx/ultragoal/ledger.jsonl as the audit trail.",

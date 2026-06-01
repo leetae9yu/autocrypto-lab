@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from autocrypto_lab.data import load_ohlcv_csv
 from autocrypto_lab.factors import add_forward_returns, add_momentum
 from autocrypto_lab.backtest import quantile_returns, research_diagnostics, run_long_short, run_signal_backtest
@@ -52,3 +54,23 @@ def test_signal_backtest_rejects_factor_shortcut_rows():
         assert "signal_score" in str(exc)
     else:
         raise AssertionError("signal backtest accepted rows without model signal output")
+
+
+def test_signal_backtest_rejects_partial_or_inconsistent_model_rows():
+    rows = fixture_rows()
+    model = fit_weighted_score_model(rows, features=["momentum"], model_id="backtest_model")
+    scored = score_model(rows, model)
+    missing_signal = [dict(row) for row in scored]
+    missing_signal[0].pop("signal_score")
+    with pytest.raises(ValueError, match="every row"):
+        run_signal_backtest(missing_signal)
+
+    inconsistent = [dict(row) for row in scored]
+    inconsistent[0]["model_id"] = "other_model"
+    with pytest.raises(ValueError, match="consistent"):
+        run_signal_backtest(inconsistent)
+
+    missing_terminal_model_id = [dict(row) for row in scored]
+    missing_terminal_model_id[-1]["model_id"] = ""
+    with pytest.raises(ValueError, match="consistent"):
+        run_signal_backtest(missing_terminal_model_id)

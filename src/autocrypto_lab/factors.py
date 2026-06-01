@@ -115,10 +115,19 @@ def apply_factor_dsl(rows: list[dict[str, Any]], specs: list[dict[str, Any]]) ->
 
 
 def _latest_known(rows: list[dict[str, Any]], symbol: str, timestamp: Any) -> dict[str, Any]:
-    candidates = [row for row in rows if row.get("symbol") == symbol and row.get("timestamp") <= timestamp]
+    def known_time(row: dict[str, Any]) -> Any:
+        return row.get("known_at") or row.get("timestamp")
+
+    candidates = [
+        row
+        for row in rows
+        if row.get("symbol") == symbol
+        and row.get("timestamp") <= timestamp
+        and known_time(row) <= timestamp
+    ]
     if not candidates:
         return {}
-    return max(candidates, key=lambda row: row["timestamp"])
+    return max(candidates, key=known_time)
 
 
 def build_public_futures_feature_table(
@@ -145,9 +154,9 @@ def build_public_futures_feature_table(
         enriched["spot_future_basis"] = float(b.get("spot_future_basis", b.get("basis", 0.0)))
         enriched["source_known_at"] = {
             "kline": timestamp,
-            "funding": f.get("timestamp"),
-            "open_interest": oi.get("timestamp"),
-            "basis": b.get("timestamp"),
+            "funding": f.get("known_at", f.get("timestamp")),
+            "open_interest": oi.get("known_at", oi.get("timestamp")),
+            "basis": b.get("known_at", b.get("timestamp")),
         }
         base.append(enriched)
     featured = apply_factor_dsl(base, factor_specs or [{"name": "momentum"}, {"name": "volatility"}, {"name": "derivatives_pressure"}])

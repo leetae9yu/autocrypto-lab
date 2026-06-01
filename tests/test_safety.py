@@ -46,9 +46,14 @@ def test_config_keys_reject_private_credentials():
 
 def test_public_route_rejects_signed_private_or_mutating_routes():
     assert_public_route("GET", "/fapi/v1/klines")
+    assert_public_route("GET", "/fapi/v1/klines?symbol=BTCUSDT&interval=1h")
     with pytest.raises(SafetyViolation, match="POST"):
         assert_public_route("POST", "/fapi/v1/klines")
     with pytest.raises(SafetyViolation, match="route"):
         assert_public_route("GET", "/fapi/v1/order")
+    with pytest.raises(SafetyViolation, match="approved public endpoints"):
+        assert_public_route("GET", "/fapi/v1/userTrades")
+    with pytest.raises(SafetyViolation, match="query keys"):
+        assert_public_route("GET", "/fapi/v1/klines?signature=abc")
     with pytest.raises(SafetyViolation, match="auth headers"):
         assert_public_route("GET", "/fapi/v1/klines", headers={"X-MBX-APIKEY": "x"})

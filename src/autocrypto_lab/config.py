@@ -10,6 +10,20 @@ from autocrypto_lab.safety import ReadOnlyExchangePolicy, assert_no_forbidden_co
 CANONICAL_SYMBOLS = ("BTC", "ETH", "SOL", "XRP")
 ALLOWED_FACTORS = ("momentum", "reversal", "volatility", "flow", "derivatives_pressure")
 ALLOWED_MODELS = ("baseline_mean",)
+ALLOWED_CONFIG_KEYS = {
+    "run_id",
+    "symbols",
+    "interval",
+    "horizon_periods",
+    "factors",
+    "model",
+    "fee_bps",
+    "slippage_bps",
+    "allow_private_read",
+    "allow_trading",
+    "public_only",
+    "metadata",
+}
 
 
 class ConfigError(ValueError):
@@ -88,6 +102,10 @@ class ExperimentConfig:
 
 
 def load_config(raw: Mapping[str, Any]) -> ExperimentConfig:
+    assert_no_forbidden_config_keys(raw.keys())
+    unknown = sorted(set(raw) - ALLOWED_CONFIG_KEYS)
+    if unknown:
+        raise ConfigError(f"unknown config keys: {unknown}")
     cfg = ExperimentConfig(
         run_id=str(raw.get("run_id", "")),
         symbols=tuple(raw.get("symbols", CANONICAL_SYMBOLS)),
