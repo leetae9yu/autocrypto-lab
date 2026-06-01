@@ -35,14 +35,14 @@ def test_accepts_cpu_friendly_model_registry_with_params():
     cfg = load_config(
         {
             "run_id": "cpu",
-            "model": "walk_forward_sign_weight_score",
-            "model_params": {"train_periods": 24, "test_periods": 6},
+            "model": "walk_forward_random_forest",
+            "model_params": {"n_estimators": 25, "max_depth": 3, "min_samples_leaf": 2, "random_state": 42},
         }
     )
     assert cfg.model in CPU_FRIENDLY_MODELS
     assert cfg.model_spec() == {
-        "name": "walk_forward_sign_weight_score",
-        "params": {"train_periods": 24, "test_periods": 6},
+        "name": "walk_forward_random_forest",
+        "params": {"n_estimators": 25, "max_depth": 3, "min_samples_leaf": 2, "random_state": 42},
     }
 
 

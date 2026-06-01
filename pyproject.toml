@@ -9,6 +9,9 @@ description = "Local-first crypto quant research pipeline with config-only auton
 requires-python = ">=3.9"
 readme = "README.md"
 authors = [{ name = "Autocrypto Lab" }]
+dependencies = [
+  "scikit-learn>=1.4,<1.7",
+]
 
 [project.scripts]
 autocrypto = "autocrypto_lab.cli:main"

@@ -17,6 +17,7 @@ WEIGHT_MODE_BY_MODEL_FAMILY = {
     "walk_forward_sign_weight_score": "sign",
 }
 STATIC_WEIGHT_MODES = ("correlation", "equal", "sign")
+RANDOM_FOREST_MODEL_FAMILY = "walk_forward_random_forest"
 
 
 @dataclass(frozen=True)
@@ -218,6 +219,145 @@ def fit_walk_forward_weighted_score_model(
             "walk_forward": True,
             "model_family": model_family,
             "weight_mode": weight_mode,
+            "train_periods": train_periods,
+            "test_periods": test_periods,
+            "step_periods": step,
+            "folds": folds,
+            "n_scored": len(scored_rows),
+        },
+    )
+    return artifact.with_outputs(""), sorted(scored_rows, key=lambda row: (row["timestamp"], row["symbol"]))
+
+
+def fit_walk_forward_random_forest_model(
+    rows: list[dict[str, Any]],
+    *,
+    features: list[str],
+    target: str = "forward_return",
+    model_id: str = "walk_forward_random_forest_v1",
+    train_periods: int = 24,
+    test_periods: int = 6,
+    step_periods: int | None = None,
+    n_estimators: int = 100,
+    max_depth: int | None = 3,
+    min_samples_leaf: int = 5,
+    random_state: int = 42,
+    n_jobs: int = 1,
+) -> tuple[FactorModelArtifact, list[dict[str, Any]]]:
+    """Fit a CPU-friendly random forest regressor on rolling train windows."""
+    if not features:
+        raise ValueError("at least one feature is required")
+    if train_periods < 1 or test_periods < 1:
+        raise ValueError("walk-forward train_periods and test_periods must be positive")
+    if n_estimators < 1:
+        raise ValueError("random forest n_estimators must be positive")
+    if min_samples_leaf < 1:
+        raise ValueError("random forest min_samples_leaf must be positive")
+    from sklearn.ensemble import RandomForestRegressor
+
+    step = step_periods or test_periods
+    if step < 1:
+        raise ValueError("walk-forward step_periods must be positive")
+    timestamps = sorted({row["timestamp"] for row in rows})
+    fold_start = 0
+    fold_idx = 0
+    scored_rows: list[dict[str, Any]] = []
+    folds: list[dict[str, Any]] = []
+    fold_importances: list[dict[str, float]] = []
+    while fold_start + train_periods + test_periods <= len(timestamps):
+        train_ts = timestamps[fold_start: fold_start + train_periods]
+        test_ts = timestamps[fold_start + train_periods: fold_start + train_periods + test_periods]
+        train_end = train_ts[-1]
+        train_set = set(train_ts)
+        test_set = set(test_ts)
+        train_rows = [
+            row
+            for row in rows
+            if row["timestamp"] in train_set
+            and row.get("label_available", True)
+            and row.get("label_timestamp", row["timestamp"]) <= train_end
+        ]
+        test_rows = [row for row in rows if row["timestamp"] in test_set]
+        if train_rows and test_rows:
+            x_train = [[float(row.get(feature, 0.0)) for feature in features] for row in train_rows]
+            y_train = [float(row.get(target, 0.0)) for row in train_rows]
+            x_test = [[float(row.get(feature, 0.0)) for feature in features] for row in test_rows]
+            regressor = RandomForestRegressor(
+                n_estimators=n_estimators,
+                max_depth=max_depth,
+                min_samples_leaf=min_samples_leaf,
+                random_state=random_state + fold_idx,
+                n_jobs=n_jobs,
+            )
+            regressor.fit(x_train, y_train)
+            predictions = regressor.predict(x_test)
+            importances = {feature: float(value) for feature, value in zip(features, regressor.feature_importances_)}
+            fold_importances.append(importances)
+            for row, prediction in zip(test_rows, predictions):
+                scored_rows.append(
+                    {
+                        **row,
+                        "model_id": model_id,
+                        "signal_score": float(prediction),
+                        "walk_forward_fold": fold_idx,
+                        "train_start": train_ts[0],
+                        "train_end": train_ts[-1],
+                        "test_start": test_ts[0],
+                        "test_end": test_ts[-1],
+                    }
+                )
+            folds.append(
+                {
+                    "fold": fold_idx,
+                    "train_start": train_ts[0],
+                    "train_end": train_ts[-1],
+                    "test_start": test_ts[0],
+                    "test_end": test_ts[-1],
+                    "n_train": len(train_rows),
+                    "n_test": len(test_rows),
+                    "feature_importances": importances,
+                }
+            )
+            fold_idx += 1
+        fold_start += step
+    if not scored_rows:
+        raise ValueError("walk-forward random forest configuration produced no scored out-of-sample rows")
+    average_importances = {
+        feature: mean([importance.get(feature, 0.0) for importance in fold_importances])
+        for feature in features
+    }
+    train_window = {"start": folds[0]["train_start"], "end": folds[-1]["train_end"]}
+    eval_window = {"start": folds[0]["test_start"], "end": folds[-1]["test_end"]}
+    artifact = FactorModelArtifact(
+        model_id=model_id,
+        model_type=RANDOM_FOREST_MODEL_FAMILY,
+        features=list(features),
+        weights=average_importances,
+        train_window=train_window,
+        eval_window=eval_window,
+        input_hash=stable_hash(
+            {
+                "rows": rows,
+                "features": features,
+                "model_family": RANDOM_FOREST_MODEL_FAMILY,
+                "train_periods": train_periods,
+                "test_periods": test_periods,
+                "step_periods": step,
+                "n_estimators": n_estimators,
+                "max_depth": max_depth,
+                "min_samples_leaf": min_samples_leaf,
+                "random_state": random_state,
+            }
+        ),
+        metrics={
+            "walk_forward": True,
+            "model_family": RANDOM_FOREST_MODEL_FAMILY,
+            "estimator": "sklearn.ensemble.RandomForestRegressor",
+            "n_estimators": n_estimators,
+            "max_depth": max_depth,
+            "min_samples_leaf": min_samples_leaf,
+            "random_state": random_state,
+            "n_jobs": n_jobs,
             "train_periods": train_periods,
             "test_periods": test_periods,
             "step_periods": step,

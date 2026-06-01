@@ -105,6 +105,9 @@ Supported model families are CPU-friendly score models only:
 - `walk_forward_weighted_score`
 - `walk_forward_equal_weight_score`
 - `walk_forward_sign_weight_score`
+- `walk_forward_random_forest`
+
+`walk_forward_random_forest` uses scikit-learn's CPU `RandomForestRegressor` and keeps hyperparameters in config, e.g. `n_estimators`, `max_depth`, `min_samples_leaf`, `random_state`, and `n_jobs`.
 
 GPU/deep-learning families such as LSTM/Transformer models are intentionally rejected by config validation for this phase.
 

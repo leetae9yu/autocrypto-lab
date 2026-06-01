@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from autocrypto_lab.factors import build_public_futures_feature_table
-from autocrypto_lab.models import fit_walk_forward_weighted_score_model, fit_weighted_score_model, score_model, write_model_artifacts
+from autocrypto_lab.models import fit_walk_forward_random_forest_model, fit_walk_forward_weighted_score_model, fit_weighted_score_model, score_model, write_model_artifacts
 
 
 def ts(hour: int):
@@ -121,4 +121,28 @@ def test_walk_forward_equal_model_family_preserves_oos_contract():
     assert model.metrics["weight_mode"] == "equal"
     assert model.metrics["folds"][0]["weights"] == {"momentum": 0.5, "derivatives_pressure": 0.5}
     assert scored
+    assert all(row["test_start"] > row["train_end"] for row in scored)
+
+
+def test_walk_forward_random_forest_scores_oos_and_records_importance():
+    rows = feature_rows()
+    model, scored = fit_walk_forward_random_forest_model(
+        rows,
+        features=["momentum", "derivatives_pressure"],
+        model_id="wf_rf",
+        train_periods=2,
+        test_periods=1,
+        n_estimators=5,
+        max_depth=2,
+        min_samples_leaf=1,
+        random_state=7,
+    )
+
+    assert model.model_type == "walk_forward_random_forest"
+    assert model.metrics["estimator"] == "sklearn.ensemble.RandomForestRegressor"
+    assert model.metrics["n_estimators"] == 5
+    assert model.metrics["folds"][0]["feature_importances"]
+    assert set(model.weights) == {"momentum", "derivatives_pressure"}
+    assert scored
+    assert all(row["model_id"] == "wf_rf" for row in scored)
     assert all(row["test_start"] > row["train_end"] for row in scored)

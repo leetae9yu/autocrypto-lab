@@ -99,3 +99,30 @@ def test_public_binance_pipeline_propagates_cpu_model_family(tmp_path: Path):
     assert manifest["source_metadata"]["model_family"] == "walk_forward_equal_weight_score"
     assert model["model_type"] == "walk_forward_equal_weight_score"
     assert model["metrics"]["weight_mode"] == "equal"
+
+
+def test_public_binance_pipeline_runs_random_forest_family(tmp_path: Path):
+    outputs = run_public_binance_pipeline(
+        tmp_path,
+        {
+            "run_id": "fake_live_rf",
+            "symbols": ["BTC", "ETH"],
+            "interval": "1h",
+            "factors": ["momentum", "derivatives_pressure"],
+            "model": "walk_forward_random_forest",
+            "model_params": {"n_estimators": 5, "max_depth": 2, "min_samples_leaf": 1, "random_state": 11},
+        },
+        start=ts(0),
+        end=ts(3),
+        adapter=FakeBinanceAdapter(),
+        train_periods=2,
+        test_periods=1,
+    )
+
+    manifest = json.loads(outputs["manifest"].read_text())
+    model = json.loads(outputs["model"].read_text())
+    signals = json.loads(outputs["signals"].read_text())
+    assert manifest["source_metadata"]["model_family"] == "walk_forward_random_forest"
+    assert model["model_type"] == "walk_forward_random_forest"
+    assert model["metrics"]["estimator"] == "sklearn.ensemble.RandomForestRegressor"
+    assert signals and all(row["test_start"] > row["train_end"] for row in signals)

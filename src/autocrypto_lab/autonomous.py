@@ -70,6 +70,11 @@ def generate_candidate_configs(base_config: dict[str, Any], max_candidates: int 
             {"model": "walk_forward_sign_weight_score", "factors": base_factors},
         ),
         (
+            "random_forest_depth3",
+            "Random forest regressor tests nonlinear factor interactions while staying CPU-friendly.",
+            {"model": "walk_forward_random_forest", "factors": base_factors, "model_params": {"n_estimators": 100, "max_depth": 3, "min_samples_leaf": 5, "random_state": 42, "n_jobs": 1}},
+        ),
+        (
             "short_train_window",
             "Shorter walk-forward train window tests faster regime adaptation with the same factor set.",
             {"model": "walk_forward_weighted_score", "factors": base_factors, "model_params": {"train_periods": 24, "test_periods": 6}},

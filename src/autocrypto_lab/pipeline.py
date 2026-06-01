@@ -13,7 +13,7 @@ from autocrypto_lab.config import load_config
 from autocrypto_lab.data import load_ohlcv_csv
 from autocrypto_lab.factors import add_forward_returns, apply_factor_dsl, build_public_futures_feature_table
 from autocrypto_lab.manifest import RunManifest, stable_hash, write_manifest
-from autocrypto_lab.models import WEIGHT_MODE_BY_MODEL_FAMILY, fit_walk_forward_weighted_score_model, fit_weighted_score_model, score_model, write_model_artifacts
+from autocrypto_lab.models import RANDOM_FOREST_MODEL_FAMILY, WEIGHT_MODE_BY_MODEL_FAMILY, fit_walk_forward_random_forest_model, fit_walk_forward_weighted_score_model, fit_weighted_score_model, score_model, write_model_artifacts
 from autocrypto_lab.pit import validate_feature_label_order
 from autocrypto_lab.report import write_markdown_report
 from autocrypto_lab.regime import write_regime_report
@@ -368,16 +368,32 @@ def run_public_binance_pipeline(
         featured,
         {"source": "binance_usdm_public", "start": start.isoformat(), "end": end.isoformat(), "interval": cfg.interval},
     )
-    selected_model_family = cfg.model if cfg.model in WEIGHT_MODE_BY_MODEL_FAMILY else "walk_forward_weighted_score"
-    model, scored = fit_walk_forward_weighted_score_model(
-        featured,
-        features=[spec["name"] for spec in features],
-        model_id=f"{cfg.run_id}_{selected_model_family}",
-        train_periods=train_periods,
-        test_periods=test_periods,
-        step_periods=step_periods,
-        model_family=selected_model_family,
-    )
+    selected_model_family = cfg.model if cfg.model in (*WEIGHT_MODE_BY_MODEL_FAMILY, RANDOM_FOREST_MODEL_FAMILY) else "walk_forward_weighted_score"
+    model_params = dict(cfg.model_params)
+    if selected_model_family == RANDOM_FOREST_MODEL_FAMILY:
+        model, scored = fit_walk_forward_random_forest_model(
+            featured,
+            features=[spec["name"] for spec in features],
+            model_id=f"{cfg.run_id}_{selected_model_family}",
+            train_periods=train_periods,
+            test_periods=test_periods,
+            step_periods=step_periods,
+            n_estimators=int(model_params.get("n_estimators", 100)),
+            max_depth=int(model_params["max_depth"]) if model_params.get("max_depth") is not None else None,
+            min_samples_leaf=int(model_params.get("min_samples_leaf", 5)),
+            random_state=int(model_params.get("random_state", 42)),
+            n_jobs=int(model_params.get("n_jobs", 1)),
+        )
+    else:
+        model, scored = fit_walk_forward_weighted_score_model(
+            featured,
+            features=[spec["name"] for spec in features],
+            model_id=f"{cfg.run_id}_{selected_model_family}",
+            train_periods=train_periods,
+            test_periods=test_periods,
+            step_periods=step_periods,
+            model_family=selected_model_family,
+        )
     model_dir = output_dir / "models"
     persisted_model = write_model_artifacts(model_dir, model, scored)
     metrics = run_signal_backtest(scored, fee_bps=cfg.fee_bps, slippage_bps=cfg.slippage_bps)
