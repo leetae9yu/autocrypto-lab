@@ -63,6 +63,36 @@ PYTHONPATH=src python3 -m autocrypto_lab.cli run-public-binance \
 
 This command downloads public klines, funding rates, open-interest statistics, and basis data, persists raw/normalized artifacts, builds a PIT feature table, fits rolling walk-forward weighted-score factor models, persists out-of-sample `model_id`/`signal_score` artifacts, and runs the cost-aware signal backtest. It does **not** use API keys and does **not** place or modify trades.
 
+### CPU-friendly autonomous research loop
+
+The autonomous loop is still **research-only** and **config-only**: it generates bounded candidate configs, runs each candidate through the same public Binance walk-forward pipeline, ranks the diagnostics, and writes an auditable ledger. It does not edit runtime code, use API keys, or place sandbox/live orders.
+
+```bash
+PYTHONPATH=src python3 -m autocrypto_lab.cli run-agent-loop \
+  --output-dir /tmp/autocrypto-agent-loop-smoke \
+  --run-id agent_loop_smoke \
+  --symbols BTC,ETH \
+  --interval 1h \
+  --lookback-hours 72 \
+  --train-periods 24 \
+  --test-periods 6 \
+  --max-candidates 3
+```
+
+Expected autonomous artifacts:
+
+- `/tmp/autocrypto-agent-loop-smoke/candidate_evaluations.json`
+- `/tmp/autocrypto-agent-loop-smoke/agent_ledger.jsonl`
+- one isolated candidate directory per generated config, each with `manifest.json`, `metrics.json`, `report.md`, `dashboard.html`, model artifact, signal artifact, and feature table
+
+Supported model families are CPU-friendly score models only:
+
+- `walk_forward_weighted_score`
+- `walk_forward_equal_weight_score`
+- `walk_forward_sign_weight_score`
+
+GPU/deep-learning families such as LSTM/Transformer models are intentionally rejected by config validation for this phase.
+
 ## Planning artifacts
 
 - Deep-interview spec: `.omx/specs/deep-interview-crypto-quant-research-pipeline.md`

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T07:25:19.290Z",
-  "updatedAt": "2026-06-01T07:34:56.804Z",
+  "updatedAt": "2026-06-01T07:36:11.783Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -130,17 +130,23 @@
       "id": "G006-agent-loop-cli-docs",
       "title": "Agent loop CLI and docs",
       "objective": "Add a run-agent-loop CLI and README usage for the CPU-friendly autonomous loop.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T07:25:19.290Z",
-      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "updatedAt": "2026-06-01T07:36:11.783Z",
       "commitIntent": "Expose CPU-friendly autonomous research loop",
       "acceptanceCriteria": [
         "CLI can run the autonomous loop with public Binance data and no credentials.",
         "README documents CPU-friendly autonomy, safety limits, and example commands.",
         "CLI help/tests cover the new command surface."
       ],
-      "evidence": []
+      "evidence": [
+        "Added run-agent-loop CLI with public Binance data defaults, candidate budget, walk-forward windows, and output summary/ledger paths.",
+        "README documents CPU-friendly autonomous loop usage, artifacts, supported model families, and safety limits.",
+        "CLI test monkeypatches evaluator to verify argument wiring without network/API keys.",
+        "Verification: python3 -m pytest tests/test_cli.py tests/test_autonomous_loop.py -q (14 passed); python3 -m pytest -q (84 passed); python3 -m compileall -q src tests."
+      ],
+      "completedAt": "2026-06-01T07:36:11.783Z"
     },
     {
       "id": "G007-final-verification-gate",

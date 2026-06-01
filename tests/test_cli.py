@@ -1,4 +1,5 @@
 from autocrypto_lab import __version__
+import autocrypto_lab.cli as cli
 from autocrypto_lab.cli import main
 
 
@@ -21,3 +22,45 @@ def test_cli_run_public_fixture(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "model:" in out
     assert (tmp_path / "models" / "cli_public_weighted_score.model.json").exists()
+
+
+def test_cli_run_agent_loop_uses_public_autonomous_evaluator(tmp_path, capsys, monkeypatch):
+    calls = {}
+
+    def fake_evaluator(output_dir, base_config, **kwargs):
+        calls["output_dir"] = output_dir
+        calls["base_config"] = base_config
+        calls["kwargs"] = kwargs
+        return {
+            "summary_path": str(tmp_path / "candidate_evaluations.json"),
+            "ledger_path": str(tmp_path / "agent_ledger.jsonl"),
+            "best_candidate_id": "candidate_001_weighted_score_baseline",
+            "candidate_count": 1,
+        }
+
+    monkeypatch.setattr(cli, "evaluate_candidate_configs", fake_evaluator)
+
+    assert main(
+        [
+            "run-agent-loop",
+            "--output-dir",
+            str(tmp_path),
+            "--run-id",
+            "cli_agent",
+            "--symbols",
+            "BTC,ETH",
+            "--factors",
+            "momentum,derivatives_pressure",
+            "--lookback-hours",
+            "48",
+            "--max-candidates",
+            "1",
+        ]
+    ) == 0
+
+    out = capsys.readouterr().out
+    assert "best_candidate_id: candidate_001_weighted_score_baseline" in out
+    assert calls["base_config"]["run_id"] == "cli_agent"
+    assert calls["base_config"]["symbols"] == ["BTC", "ETH"]
+    assert calls["base_config"]["factors"] == ["momentum", "derivatives_pressure"]
+    assert calls["kwargs"]["max_candidates"] == 1
