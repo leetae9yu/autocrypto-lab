@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:42:01.401Z",
+  "updatedAt": "2026-06-01T04:43:03.205Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -33,10 +33,12 @@
       "id": "G003-config-registry-ledger",
       "title": "Config schema, registries, manifests, ledger foundation",
       "objective": "Add typed config validation, component registries, run manifest schema, and ledger schema/tests.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:43:03.205Z",
+      "completedAt": "2026-06-01T04:43:03.205Z",
+      "evidence": "G003: config validation, registries, manifest hash/write helpers, JSONL ledger tests; pytest 13 passed"
     },
     {
       "id": "G004-walking-skeleton",
