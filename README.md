@@ -48,6 +48,19 @@ Expected public fixture artifacts:
 
 The sample path uses deterministic fixtures under `tests/fixtures/` so CI does not need network access or credentials.
 
+To run the same model/backtest path on **real API-key-free Binance USDⓈ-M public futures data**:
+
+```bash
+PYTHONPATH=src python3 -m autocrypto_lab.cli run-public-binance \
+  --output-dir /tmp/autocrypto-real-binance-smoke \
+  --run-id real_binance_smoke \
+  --symbols BTC,ETH \
+  --interval 1h \
+  --lookback-hours 12
+```
+
+This command downloads public klines, funding rates, open-interest statistics, and basis data, persists raw/normalized artifacts, builds a PIT feature table, fits the weighted-score factor model, persists `model_id`/`signal_score` artifacts, and runs the cost-aware signal backtest. It does **not** use API keys and does **not** place or modify trades.
+
 ## Planning artifacts
 
 - Deep-interview spec: `.omx/specs/deep-interview-crypto-quant-research-pipeline.md`

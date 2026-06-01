@@ -142,20 +142,30 @@ class BinancePublicFuturesAdapter:
             for a, b in _chunk_windows(start, end, interval=eight_hours, limit=FUNDING_LIMIT)
         ]
 
-    def open_interest_request(self, asset: str, period: str = "1h") -> PublicFuturesRequest:
+    def open_interest_request(self, asset: str, period: str = "1h", start: datetime | None = None, end: datetime | None = None) -> PublicFuturesRequest:
         symbol = futures_symbol(asset)
+        params: dict[str, str | int] = {"symbol": symbol, "period": period, "limit": PUBLIC_DATA_LIMIT}
+        if start is not None:
+            params["startTime"] = epoch_ms(start)
+        if end is not None:
+            params["endTime"] = epoch_ms(end)
         return PublicFuturesRequest(
             endpoint="/futures/data/openInterestHist",
-            params={"symbol": symbol, "period": period, "limit": PUBLIC_DATA_LIMIT},
+            params=params,
             limit=PUBLIC_DATA_LIMIT,
             retention_note="Binance public open interest statistics endpoint documents latest 1 month availability.",
         )
 
-    def basis_request(self, asset: str, period: str = "1h") -> PublicFuturesRequest:
+    def basis_request(self, asset: str, period: str = "1h", start: datetime | None = None, end: datetime | None = None) -> PublicFuturesRequest:
         symbol = futures_symbol(asset)
+        params: dict[str, str | int] = {"pair": symbol, "contractType": "PERPETUAL", "period": period, "limit": PUBLIC_DATA_LIMIT}
+        if start is not None:
+            params["startTime"] = epoch_ms(start)
+        if end is not None:
+            params["endTime"] = epoch_ms(end)
         return PublicFuturesRequest(
             endpoint="/futures/data/basis",
-            params={"pair": symbol, "contractType": "PERPETUAL", "period": period, "limit": PUBLIC_DATA_LIMIT},
+            params=params,
             limit=PUBLIC_DATA_LIMIT,
             retention_note="Binance public basis endpoint documents latest 30 days availability.",
         )
