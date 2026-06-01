@@ -1,155 +1,96 @@
 {
   "version": 1,
-  "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T05:03:15.958Z",
+  "createdAt": "2026-06-01T05:51:26.521Z",
+  "updatedAt": "2026-06-01T05:51:47.640988Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
   "codexGoalMode": "aggregate",
   "goals": [
     {
-      "id": "G001-project-skeleton",
-      "title": "Project skeleton and CLI smoke",
-      "objective": "Create package layout, CLI entrypoint, sample fixtures, CI/test baseline; prove CLI help/import tests pass.",
-      "status": "complete",
+      "id": "G001-public-only-boundary",
+      "title": "Public-only phase safety boundary",
+      "objective": "Extend config/safety tests so the next phase rejects API keys, secrets, private reads, signed/private/order/leverage/margin routes, exchange POST/DELETE actions, and preserves >=1h cadence/no-trade scope.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:41:18.439Z",
-      "completedAt": "2026-06-01T04:41:18.439Z",
-      "evidence": "G001: package skeleton, CLI entrypoint, sample OHLCV fixture, pytest CLI smoke: 3 passed"
+      "createdAt": "2026-06-01T05:51:47.640988Z",
+      "updatedAt": "2026-06-01T05:51:47.640988Z"
     },
     {
-      "id": "G002-safety-boundary",
-      "title": "No-trade safety boundary first",
-      "objective": "Implement restricted read-only adapter boundary and tests proving v1 exposes no order endpoints or trading-permission config.",
-      "status": "complete",
+      "id": "G002-public-futures-adapters",
+      "title": "Binance public futures adapter contracts",
+      "objective": "Implement API-key-free public futures request planning/fake-client adapters for klines, funding, open interest, basis, public archive metadata, and BTC/ETH/SOL/XRP -> *USDT mapping.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:42:01.401Z",
-      "completedAt": "2026-06-01T04:42:01.401Z",
-      "evidence": "G002: read-only policy/adapter and no-trade safety tests; pytest 8 passed"
+      "createdAt": "2026-06-01T05:51:47.640988Z",
+      "updatedAt": "2026-06-01T05:51:47.640988Z"
     },
     {
-      "id": "G003-config-registry-ledger",
-      "title": "Config schema, registries, manifests, ledger foundation",
-      "objective": "Add typed config validation, component registries, run manifest schema, and ledger schema/tests.",
-      "status": "complete",
+      "id": "G003-artifact-storage",
+      "title": "Raw/normalized artifact storage",
+      "objective": "Add endpoint-specific raw response artifacts, normalized public futures tables, schema/version/hash/retention/checksum metadata, and deterministic storage tests.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:43:03.205Z",
-      "completedAt": "2026-06-01T04:43:03.205Z",
-      "evidence": "G003: config validation, registries, manifest hash/write helpers, JSONL ledger tests; pytest 13 passed"
+      "createdAt": "2026-06-01T05:51:47.640988Z",
+      "updatedAt": "2026-06-01T05:51:47.640988Z"
     },
     {
-      "id": "G004-walking-skeleton",
-      "title": "Minimal fixture walking skeleton",
-      "objective": "Run fixture OHLCV through one factor, PIT check, cost-aware simple backtest, manifest, and markdown report.",
-      "status": "complete",
+      "id": "G004-pit-feature-table",
+      "title": "PIT public futures feature table",
+      "objective": "Build known-at aligned feature tables from klines/funding/open-interest/basis with leakage tests and label horizon handling.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:44:34.475Z",
-      "completedAt": "2026-06-01T04:44:34.475Z",
-      "evidence": "G004: fixture OHLCV -> momentum -> PIT check -> cost-aware long/short -> report/manifest; pytest 15 passed"
+      "createdAt": "2026-06-01T05:51:47.640988Z",
+      "updatedAt": "2026-06-01T05:51:47.640988Z"
     },
     {
-      "id": "G005-data-adapter-storage",
-      "title": "Public/free data adapter contracts and local storage snapshots",
-      "objective": "Define public data adapter interfaces and local snapshot contracts for BTC/ETH/SOL/XRP with cadence >=1h validation.",
-      "status": "complete",
+      "id": "G005-factor-model-artifacts",
+      "title": "Real multi-factor model artifacts",
+      "objective": "Add dependency-light model artifact layer with model_id, feature list, weights/rules, train/eval windows, input hashes, signal_score output, metrics, and artifact hash.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:45:15.615Z",
-      "completedAt": "2026-06-01T04:45:15.615Z",
-      "evidence": "G005: public/free adapter contracts and local snapshot manifest storage; pytest 18 passed"
+      "createdAt": "2026-06-01T05:51:47.640988Z",
+      "updatedAt": "2026-06-01T05:51:47.640988Z"
     },
     {
-      "id": "G006-factor-dsl-families",
-      "title": "Factor DSL families and timeframe axis",
-      "objective": "Expose momentum, reversal, volatility, flow/supply-demand, and derivatives factors through config-only DSL.",
-      "status": "complete",
+      "id": "G006-model-signal-backtest",
+      "title": "Model-signal strategy backtests",
+      "objective": "Route strategy/backtest diagnostics through persisted model_id/signal_score artifacts, including costs/funding proxy/IC/quantiles/turnover/volatility/MDD/stability.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:45:54.015Z",
-      "completedAt": "2026-06-01T04:45:54.015Z",
-      "evidence": "G006: config-only factor DSL covers momentum/reversal/volatility/flow/derivatives pressure; pytest 20 passed"
+      "createdAt": "2026-06-01T05:51:47.640988Z",
+      "updatedAt": "2026-06-01T05:51:47.640988Z"
     },
     {
-      "id": "G007-pit-validation",
-      "title": "PIT and leakage validation hardening",
-      "objective": "Add adversarial PIT/leakage tests and known-at timestamp semantics.",
-      "status": "complete",
+      "id": "G007-autonomous-loop",
+      "title": "Autonomous config-only experiment loop",
+      "objective": "Run repeated bounded config-only experiments that propose variants, execute model/backtests, rank Pareto diagnostics, and ledger full provenance including data/feature/model/signal artifact ids.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:46:28.823Z",
-      "completedAt": "2026-06-01T04:46:28.823Z",
-      "evidence": "G007: PIT known-at, feature/label ordering, and pre/post event leak tests; pytest 24 passed"
+      "createdAt": "2026-06-01T05:51:47.640988Z",
+      "updatedAt": "2026-06-01T05:51:47.640988Z"
     },
     {
-      "id": "G008-backtest-diagnostics",
-      "title": "Backtest diagnostics and cost metrics",
-      "objective": "Add IC, quantile returns, long/short, volatility, MDD, turnover, fees/slippage/funding proxies.",
-      "status": "complete",
+      "id": "G008-cli-docs-e2e",
+      "title": "CLI, docs, reports, and fixture e2e",
+      "objective": "Expose fixture/replay-first CLI vertical slice and documentation for public-data no-key scope, limitations, generated reports, and dashboard artifacts.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:47:02.481Z",
-      "completedAt": "2026-06-01T04:47:02.481Z",
-      "evidence": "G008: IC, quantile returns, long/short, volatility/MDD/turnover/cost/funding diagnostics; pytest 26 passed"
+      "createdAt": "2026-06-01T05:51:47.640988Z",
+      "updatedAt": "2026-06-01T05:51:47.640988Z"
     },
     {
-      "id": "G009-etf-event-registry",
-      "title": "Sourced ETF event/window registry",
-      "objective": "Create source-backed event registry for ETF approval/trading/stabilization windows with metadata tests.",
-      "status": "complete",
+      "id": "G009-final-quality-gate",
+      "title": "Final verification, cleanup, review, and push",
+      "objective": "Run full deterministic verification, no-trade/no-signed-route scan, ai-slop-cleaner report, code-review APPROVE/CLEAR, commit final checkpoint, and push origin main.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:47:47.954Z",
-      "completedAt": "2026-06-01T04:47:47.954Z",
-      "evidence": "G009: sourced SEC/Nasdaq/Cboe ETF event registry with approval/trading/stabilization windows; pytest 28 passed"
-    },
-    {
-      "id": "G010-regime-report",
-      "title": "ETF multi-window regime report",
-      "objective": "Generate ETF regime comparison report with required metrics and limitations.",
-      "status": "complete",
-      "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:48:24.884Z",
-      "completedAt": "2026-06-01T04:48:24.884Z",
-      "evidence": "G010: ETF multi-window regime report includes sources, IC/net/MDD/turnover/quantiles, and limitations; pytest 30 passed"
-    },
-    {
-      "id": "G011-autonomous-loop",
-      "title": "Autonomous config-only research loop",
-      "objective": "Implement dry-run loop that mutates configs only and ledgers hypotheses, config diffs, diagnostics, and Pareto decisions.",
-      "status": "complete",
-      "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:49:10.046Z",
-      "completedAt": "2026-06-01T04:49:10.046Z",
-      "evidence": "G011: config-only variant proposal, Pareto+diagnostics decision, mandatory JSONL ledger rationale; pytest 33 passed"
-    },
-    {
-      "id": "G012-dashboard-demo",
-      "title": "Minimal dashboard demo",
-      "objective": "Expose reports, runs, and ledger state in a lightweight dashboard smoke-tested on local artifacts.",
-      "status": "complete",
-      "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:49:42.452Z",
-      "completedAt": "2026-06-01T04:49:42.452Z",
-      "evidence": "G012: lightweight local HTML dashboard renders reports and autonomous ledger; pytest 35 passed"
-    },
-    {
-      "id": "G013-e2e-polish",
-      "title": "E2E polish and portfolio narrative",
-      "objective": "Document one-command run, final README narrative, full verification, cleanup/review gate, and push readiness.",
-      "status": "complete",
-      "attempt": 0,
-      "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T05:03:15.958Z",
-      "evidence": "G013: e2e portfolio narrative, final verification, ai-slop cleanup report, code-review APPROVE, architect CLEAR, Codex goal complete",
-      "completedAt": "2026-06-01T05:03:15.958Z"
+      "createdAt": "2026-06-01T05:51:47.640988Z",
+      "updatedAt": "2026-06-01T05:51:47.640988Z"
     }
   ],
-  "codexObjective": "Complete the durable ultragoal plan in .omx/ultragoal/goals.json, including all G001-G013 stories, under the approved RALPLAN constraints; use .omx/ultragoal/ledger.jsonl as the audit trail."
+  "codexObjective": "Complete the durable ultragoal plan in .omx/ultragoal/goals.json for the public futures factor autonomy phase; use .omx/ultragoal/ledger.jsonl as the audit trail.",
+  "codexObjectiveAliases": [
+    "Complete the durable ultragoal plan in .omx/ultragoal/goals.json, including later accepted/appended stories, under the original brief constraints; use .omx/ultragoal/ledger.jsonl as the audit trail."
+  ]
 }
