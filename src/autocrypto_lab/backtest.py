@@ -1,0 +1,54 @@
+"""Small deterministic cost-aware backtest diagnostics."""
+
+from __future__ import annotations
+
+from statistics import mean, pstdev
+from typing import Any
+
+
+def max_drawdown(returns: list[float]) -> float:
+    equity = 1.0
+    peak = 1.0
+    worst = 0.0
+    for ret in returns:
+        equity *= 1.0 + ret
+        peak = max(peak, equity)
+        worst = min(worst, equity / peak - 1.0)
+    return worst
+
+
+def run_long_short(rows: list[dict[str, Any]], factor: str, fee_bps: float = 5.0, slippage_bps: float = 2.0) -> dict[str, Any]:
+    usable = [row for row in rows if "forward_return" in row and factor in row]
+    if len(usable) < 2:
+        return {"periods": 0, "gross_return": 0.0, "net_return": 0.0, "volatility": 0.0, "max_drawdown": 0.0, "turnover": 0.0}
+    ranked = sorted(usable, key=lambda row: row[factor])
+    short = ranked[0]
+    long = ranked[-1]
+    gross = float(long["forward_return"]) - float(short["forward_return"])
+    cost = 2.0 * (fee_bps + slippage_bps) / 10_000.0
+    net = gross - cost
+    return {
+        "periods": 1,
+        "gross_return": gross,
+        "net_return": net,
+        "volatility": pstdev([gross, net]),
+        "max_drawdown": max_drawdown([net]),
+        "turnover": 2.0,
+        "long_symbol": long["symbol"],
+        "short_symbol": short["symbol"],
+        "cost": cost,
+    }
+
+
+def information_coefficient(rows: list[dict[str, Any]], factor: str) -> float:
+    usable = [row for row in rows if factor in row and "forward_return" in row]
+    if len(usable) < 2:
+        return 0.0
+    f_mean = mean([row[factor] for row in usable])
+    r_mean = mean([row["forward_return"] for row in usable])
+    cov = sum((row[factor] - f_mean) * (row["forward_return"] - r_mean) for row in usable)
+    f_var = sum((row[factor] - f_mean) ** 2 for row in usable)
+    r_var = sum((row["forward_return"] - r_mean) ** 2 for row in usable)
+    if not f_var or not r_var:
+        return 0.0
+    return cov / (f_var ** 0.5 * r_var ** 0.5)

@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 from autocrypto_lab import __version__
+from autocrypto_lab.pipeline import run_fixture_pipeline
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,6 +20,11 @@ def build_parser() -> argparse.ArgumentParser:
     sample = sub.add_parser("sample-info", help="Print bundled sample fixture path.")
     sample.add_argument("--root", default="tests/fixtures", help="Fixture root directory.")
 
+    run = sub.add_parser("run-sample", help="Run the fixture walking-skeleton pipeline.")
+    run.add_argument("--input", default="tests/fixtures/ohlcv_1h.csv")
+    run.add_argument("--output-dir", default="artifacts/sample_run")
+    run.add_argument("--run-id", default="sample_run")
+
     return parser
 
 
@@ -28,6 +34,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "sample-info":
         root = Path(args.root)
         print(root / "ohlcv_1h.csv")
+        return 0
+    if args.command == "run-sample":
+        outputs = run_fixture_pipeline(
+            Path(args.input),
+            Path(args.output_dir),
+            {"run_id": args.run_id, "symbols": ["BTC", "ETH"], "interval": "1h"},
+        )
+        for name, path in outputs.items():
+            print(f"{name}: {path}")
         return 0
     parser.print_help()
     return 0
