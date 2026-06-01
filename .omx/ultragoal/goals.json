@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:45:15.615Z",
+  "updatedAt": "2026-06-01T04:45:54.015Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -66,10 +66,12 @@
       "id": "G006-factor-dsl-families",
       "title": "Factor DSL families and timeframe axis",
       "objective": "Expose momentum, reversal, volatility, flow/supply-demand, and derivatives factors through config-only DSL.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:45:54.015Z",
+      "completedAt": "2026-06-01T04:45:54.015Z",
+      "evidence": "G006: config-only factor DSL covers momentum/reversal/volatility/flow/derivatives pressure; pytest 20 passed"
     },
     {
       "id": "G007-pit-validation",

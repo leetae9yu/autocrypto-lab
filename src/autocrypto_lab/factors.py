@@ -69,3 +69,58 @@ try:
     factor_registry.register("momentum", add_momentum)
 except Exception:
     pass
+
+
+def add_reversal(rows: list[dict[str, Any]], lookback: int = 1) -> list[dict[str, Any]]:
+    return [{**row, "reversal": -float(row.get("momentum", 0.0))} for row in add_momentum(rows, lookback=lookback)]
+
+
+def add_flow(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    out = []
+    for row in rows:
+        enriched = dict(row)
+        enriched["flow"] = float(row.get("volume", 0.0)) * float(row.get("close", 0.0))
+        out.append(enriched)
+    return out
+
+
+def add_derivatives_pressure(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    out = []
+    for row in rows:
+        enriched = dict(row)
+        enriched["derivatives_pressure"] = float(row.get("funding_rate", 0.0)) + float(row.get("spot_future_basis", 0.0)) / 10_000.0
+        out.append(enriched)
+    return out
+
+
+def apply_factor_dsl(rows: list[dict[str, Any]], specs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Apply declarative factor specs without allowing code mutation."""
+    out = rows
+    for spec in specs:
+        name = spec["name"]
+        params = dict(spec.get("params", {}))
+        if name == "momentum":
+            out = add_momentum(out, **params)
+        elif name == "reversal":
+            out = add_reversal(out, **params)
+        elif name == "volatility":
+            out = add_volatility(out, **params)
+        elif name == "flow":
+            out = add_flow(out)
+        elif name == "derivatives_pressure":
+            out = add_derivatives_pressure(out)
+        else:
+            raise ValueError(f"unknown factor spec: {name}")
+    return out
+
+
+for _name, _fn in {
+    "reversal": add_reversal,
+    "volatility": add_volatility,
+    "flow": add_flow,
+    "derivatives_pressure": add_derivatives_pressure,
+}.items():
+    try:
+        factor_registry.register(_name, _fn)
+    except Exception:
+        pass
