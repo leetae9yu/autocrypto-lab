@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:45:54.015Z",
+  "updatedAt": "2026-06-01T04:46:28.823Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -77,10 +77,12 @@
       "id": "G007-pit-validation",
       "title": "PIT and leakage validation hardening",
       "objective": "Add adversarial PIT/leakage tests and known-at timestamp semantics.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:46:28.823Z",
+      "completedAt": "2026-06-01T04:46:28.823Z",
+      "evidence": "G007: PIT known-at, feature/label ordering, and pre/post event leak tests; pytest 24 passed"
     },
     {
       "id": "G008-backtest-diagnostics",
