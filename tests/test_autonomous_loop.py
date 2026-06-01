@@ -192,3 +192,16 @@ def test_autonomous_config_loop_records_repeated_artifact_provenance(tmp_path: P
     assert rows[0]["model_artifact_id"] == "model-a"
     assert rows[1]["signal_artifact_id"] == "sig-b"
     assert rows[0]["config_diff"]
+
+
+def test_generate_candidate_configs_includes_low_turnover_rebalance_templates():
+    candidates = generate_candidate_configs(
+        {"run_id": "base", "symbols": ["BTC", "ETH"], "interval": "1h", "factors": ["momentum", "volatility"]},
+        max_candidates=12,
+    )
+    low_turnover = [candidate for candidate in candidates if candidate["config"].get("model_params", {}).get("backtest_rebalance_periods", 1) > 1]
+    assert low_turnover
+    assert any(candidate["config"].get("horizon_periods") == 24 for candidate in low_turnover)
+    for candidate in low_turnover:
+        load_config(candidate["config"])
+

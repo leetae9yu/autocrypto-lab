@@ -21,7 +21,19 @@ def is_labeled(row: dict[str, Any]) -> bool:
     return bool(row.get("label_available", True)) and row.get("label_timestamp", row["timestamp"]) > row["timestamp"]
 
 
-def run_long_short(rows: list[dict[str, Any]], factor: str, fee_bps: float = 5.0, slippage_bps: float = 2.0) -> dict[str, Any]:
+def run_long_short(
+    rows: list[dict[str, Any]],
+    factor: str,
+    fee_bps: float = 5.0,
+    slippage_bps: float = 2.0,
+    *,
+    rebalance_periods: int = 1,
+    min_score_spread: float = 0.0,
+) -> dict[str, Any]:
+    if rebalance_periods < 1:
+        raise ValueError("rebalance_periods must be positive")
+    if min_score_spread < 0:
+        raise ValueError("min_score_spread cannot be negative")
     usable = [row for row in rows if "forward_return" in row and factor in row and is_labeled(row)]
     by_timestamp: dict[Any, list[dict[str, Any]]] = {}
     for row in usable:
@@ -31,20 +43,43 @@ def run_long_short(rows: list[dict[str, Any]], factor: str, fee_bps: float = 5.0
     long_symbols: list[str] = []
     short_symbols: list[str] = []
     per_period_cost = 2.0 * (fee_bps + slippage_bps) / 10_000.0
-    for timestamp in sorted(by_timestamp):
+    skipped_rebalance = 0
+    skipped_spread = 0
+    for timestamp_index, timestamp in enumerate(sorted(by_timestamp)):
+        if timestamp_index % rebalance_periods != 0:
+            skipped_rebalance += 1
+            continue
         cohort = by_timestamp[timestamp]
         if len(cohort) < 2:
             continue
         ranked = sorted(cohort, key=lambda row: row[factor])
         short = ranked[0]
         long = ranked[-1]
+        score_spread = float(long[factor]) - float(short[factor])
+        if score_spread < min_score_spread:
+            skipped_spread += 1
+            continue
         gross = float(long["forward_return"]) - float(short["forward_return"])
         gross_returns.append(gross)
         net_returns.append(gross - per_period_cost)
         long_symbols.append(long["symbol"])
         short_symbols.append(short["symbol"])
     if not net_returns:
-        return {"periods": 0, "gross_return": 0.0, "net_return": 0.0, "volatility": 0.0, "max_drawdown": 0.0, "turnover": 0.0, "long_symbol": "n/a", "short_symbol": "n/a", "cost": 0.0}
+        return {
+            "periods": 0,
+            "gross_return": 0.0,
+            "net_return": 0.0,
+            "volatility": 0.0,
+            "max_drawdown": 0.0,
+            "turnover": 0.0,
+            "long_symbol": "n/a",
+            "short_symbol": "n/a",
+            "cost": 0.0,
+            "rebalance_periods": rebalance_periods,
+            "min_score_spread": min_score_spread,
+            "skipped_rebalance_periods": skipped_rebalance,
+            "skipped_spread_periods": skipped_spread,
+        }
     cost = per_period_cost * len(net_returns)
     return {
         "periods": len(net_returns),
@@ -56,10 +91,23 @@ def run_long_short(rows: list[dict[str, Any]], factor: str, fee_bps: float = 5.0
         "long_symbol": ",".join(long_symbols),
         "short_symbol": ",".join(short_symbols),
         "cost": cost,
+        "rebalance_periods": rebalance_periods,
+        "min_score_spread": min_score_spread,
+        "skipped_rebalance_periods": skipped_rebalance,
+        "skipped_spread_periods": skipped_spread,
     }
 
 
-def run_signal_backtest(rows: list[dict[str, Any]], *, score_field: str = "signal_score", fee_bps: float = 5.0, slippage_bps: float = 2.0, funding_cost: float = 0.0) -> dict[str, Any]:
+def run_signal_backtest(
+    rows: list[dict[str, Any]],
+    *,
+    score_field: str = "signal_score",
+    fee_bps: float = 5.0,
+    slippage_bps: float = 2.0,
+    funding_cost: float = 0.0,
+    rebalance_periods: int = 1,
+    min_score_spread: float = 0.0,
+) -> dict[str, Any]:
     if not rows:
         raise ValueError("model-signal backtest requires persisted signal_score rows")
     missing_scores = [idx for idx, row in enumerate(rows) if score_field not in row]
@@ -68,7 +116,14 @@ def run_signal_backtest(rows: list[dict[str, Any]], *, score_field: str = "signa
     model_ids = {str(row.get("model_id", "")) for row in rows}
     if len(model_ids) != 1 or "" in model_ids:
         raise ValueError("model-signal backtest requires a consistent non-empty model_id on every row")
-    metrics = run_long_short(rows, factor=score_field, fee_bps=fee_bps, slippage_bps=slippage_bps)
+    metrics = run_long_short(
+        rows,
+        factor=score_field,
+        fee_bps=fee_bps,
+        slippage_bps=slippage_bps,
+        rebalance_periods=rebalance_periods,
+        min_score_spread=min_score_spread,
+    )
     metrics["score_field"] = score_field
     metrics["model_id"] = next((row.get("model_id") for row in rows if row.get("model_id")), "unknown")
     metrics["funding_cost"] = funding_cost

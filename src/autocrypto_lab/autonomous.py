@@ -108,6 +108,25 @@ def generate_candidate_configs(base_config: dict[str, Any], max_candidates: int 
             {"model": "walk_forward_weighted_score", "factors": [{"name": "momentum", "params": {"lookback_periods": 3}}]},
         )
     )
+    templates.extend(
+        [
+            (
+                "rebalance_8h_horizon",
+                "Trade only every 8 hours on 8-hour forward labels to test whether lower turnover lets factor signal survive costs.",
+                {"model": "walk_forward_sign_weight_score", "horizon_periods": 8, "factors": base_factors, "model_params": {"train_periods": 168, "test_periods": 24, "backtest_rebalance_periods": 8}},
+            ),
+            (
+                "rebalance_24h_horizon",
+                "Trade once per day on 24-hour forward labels to test a cost-aware low-turnover cross-sectional factor.",
+                {"model": "walk_forward_equal_weight_score", "horizon_periods": 24, "factors": base_factors, "model_params": {"train_periods": 336, "test_periods": 24, "backtest_rebalance_periods": 24}},
+            ),
+            (
+                "rf_rebalance_24h_horizon",
+                "Random forest with daily rebalance tests nonlinear interactions under a low-turnover cost budget.",
+                {"model": "walk_forward_random_forest", "horizon_periods": 24, "factors": base_factors, "model_params": {"train_periods": 336, "test_periods": 24, "backtest_rebalance_periods": 24, "n_estimators": 100, "max_depth": 4, "min_samples_leaf": 5, "random_state": 42, "n_jobs": 1}},
+            ),
+        ]
+    )
 
     candidates: list[dict[str, Any]] = []
     for idx, (slug, hypothesis, overrides) in enumerate(templates, start=1):

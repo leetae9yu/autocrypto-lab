@@ -74,3 +74,29 @@ def test_signal_backtest_rejects_partial_or_inconsistent_model_rows():
     missing_terminal_model_id[-1]["model_id"] = ""
     with pytest.raises(ValueError, match="consistent"):
         run_signal_backtest(missing_terminal_model_id)
+
+
+def test_signal_backtest_can_reduce_turnover_with_rebalance_periods():
+    rows = fixture_rows()
+    model = fit_weighted_score_model(rows, features=["momentum"], model_id="rebalance_model")
+    scored = score_model(rows, model)
+
+    every_period = run_signal_backtest(scored)
+    sparse = run_signal_backtest(scored, rebalance_periods=2)
+
+    assert sparse["rebalance_periods"] == 2
+    assert sparse["periods"] < every_period["periods"]
+    assert sparse["turnover"] < every_period["turnover"]
+    assert sparse["cost"] < every_period["cost"]
+
+
+def test_signal_backtest_can_skip_weak_score_spreads():
+    rows = fixture_rows()
+    model = fit_weighted_score_model(rows, features=["momentum"], model_id="spread_model")
+    scored = score_model(rows, model)
+
+    metrics = run_signal_backtest(scored, min_score_spread=999.0)
+
+    assert metrics["periods"] == 0
+    assert metrics["skipped_spread_periods"] > 0
+

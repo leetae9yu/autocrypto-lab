@@ -396,7 +396,13 @@ def run_public_binance_pipeline(
         )
     model_dir = output_dir / "models"
     persisted_model = write_model_artifacts(model_dir, model, scored)
-    metrics = run_signal_backtest(scored, fee_bps=cfg.fee_bps, slippage_bps=cfg.slippage_bps)
+    metrics = run_signal_backtest(
+        scored,
+        fee_bps=cfg.fee_bps,
+        slippage_bps=cfg.slippage_bps,
+        rebalance_periods=int(model_params.get("backtest_rebalance_periods", model_params.get("rebalance_periods", 1))),
+        min_score_spread=float(model_params.get("min_score_spread", 0.0)),
+    )
     metrics["factor_model"] = persisted_model.model_id
     metrics_path = output_dir / "metrics.json"
     metrics_path.write_text(json.dumps(metrics, indent=2, sort_keys=True, default=str), encoding="utf-8")
