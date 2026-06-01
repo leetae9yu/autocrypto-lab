@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T07:25:19.290Z",
-  "updatedAt": "2026-06-01T07:27:11.234Z",
+  "updatedAt": "2026-06-01T07:28:38.184Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -22,17 +22,23 @@
       "id": "G001-cpu-model-registry-contract",
       "title": "CPU-friendly model registry contract",
       "objective": "Add config schema and model registry contract for CPU-friendly model families. Include unknown/GPU/deep-learning model rejection tests.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T07:25:19.290Z",
-      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "updatedAt": "2026-06-01T07:28:38.184Z",
       "commitIntent": "Constrain autonomous models to CPU-friendly registry",
       "acceptanceCriteria": [
         "Config accepts only approved CPU-friendly model families plus legacy baseline where needed.",
         "Config rejects LSTM/Transformer/GPU/unknown model names.",
         "Model params remain public/config-only and forbidden private keys are rejected."
       ],
-      "evidence": []
+      "evidence": [
+        "Config registry includes CPU-friendly walk_forward_weighted/equal/sign score families plus legacy baseline_mean.",
+        "Config rejects LSTM/Transformer/GPU/CUDA model names and unknown model names.",
+        "model_params are config-only mappings and private credential-like keys are rejected.",
+        "Verification: python3 -m pytest tests/test_config_registry_ledger.py -q (14 passed); python3 -m pytest -q (75 passed); python3 -m compileall -q src tests."
+      ],
+      "completedAt": "2026-06-01T07:28:38.184Z"
     },
     {
       "id": "G002-cpu-walk-forward-score-models",

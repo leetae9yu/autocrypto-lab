@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from autocrypto_lab.config import ConfigError, load_config
+from autocrypto_lab.config import CPU_FRIENDLY_MODELS, ConfigError, load_config
 from autocrypto_lab.ledger import LedgerEntry, append_ledger, read_ledger
 from autocrypto_lab.manifest import stable_hash
 from autocrypto_lab.registry import Registry, RegistryError
@@ -29,6 +29,34 @@ def test_rejects_unknown_factor_and_model():
         load_config({"run_id": "bad", "factors": ["arbitrary_python"]})
     with pytest.raises(ConfigError, match="unknown model"):
         load_config({"run_id": "bad", "model": "opaque_ai_model"})
+
+
+def test_accepts_cpu_friendly_model_registry_with_params():
+    cfg = load_config(
+        {
+            "run_id": "cpu",
+            "model": "walk_forward_sign_weight_score",
+            "model_params": {"train_periods": 24, "test_periods": 6},
+        }
+    )
+    assert cfg.model in CPU_FRIENDLY_MODELS
+    assert cfg.model_spec() == {
+        "name": "walk_forward_sign_weight_score",
+        "params": {"train_periods": 24, "test_periods": 6},
+    }
+
+
+@pytest.mark.parametrize("model", ["lstm_alpha", "transformer_ranker", "gpu_boosted", "cuda_tree"])
+def test_rejects_gpu_or_deep_learning_model_names(model: str):
+    with pytest.raises(ConfigError, match="GPU/deep-learning"):
+        load_config({"run_id": "bad", "model": model})
+
+
+def test_rejects_private_or_non_mapping_model_params():
+    with pytest.raises(Exception, match="private"):
+        load_config({"run_id": "bad", "model_params": {"api_key": "nope"}})
+    with pytest.raises(ConfigError, match="model_params must be a mapping"):
+        load_config({"run_id": "bad", "model_params": ["not", "a", "mapping"]})
 
 
 def test_public_only_config_rejects_private_reads_and_credentials():
