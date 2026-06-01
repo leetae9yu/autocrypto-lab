@@ -28,6 +28,10 @@ def test_valid_known_at_passes():
     validate_known_at([{"timestamp": ts(2), "known_at": ts(1)}])
 
 
+def test_terminal_unavailable_label_can_be_marked_without_leakage():
+    validate_feature_label_order([{"timestamp": ts(2), "label_timestamp": ts(2), "label_available": False}])
+
+
 def test_pre_event_window_cannot_contain_post_event_timestamp():
     with pytest.raises(PointInTimeError, match="pre-event"):
         validate_no_post_event_pre_event_leak([{"timestamp": ts(2), "regime": "pre"}], event_timestamp=ts(1))

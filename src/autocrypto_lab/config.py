@@ -8,6 +8,8 @@ from typing import Any, Mapping
 from autocrypto_lab.safety import ReadOnlyExchangePolicy, assert_no_forbidden_config_keys
 
 CANONICAL_SYMBOLS = ("BTC", "ETH", "SOL", "XRP")
+ALLOWED_FACTORS = ("momentum", "reversal", "volatility", "flow", "derivatives_pressure")
+ALLOWED_MODELS = ("baseline_mean",)
 
 
 class ConfigError(ValueError):
@@ -48,6 +50,12 @@ class ExperimentConfig:
             raise ConfigError("interval must be >= 1h")
         if self.horizon_periods < 1:
             raise ConfigError("horizon_periods must be positive")
+        if self.model not in ALLOWED_MODELS:
+            raise ConfigError(f"unknown model for v1 registry: {self.model}")
+        factor_names = [spec["name"] for spec in self.factor_specs()]
+        unknown_factors = sorted(set(factor_names) - set(ALLOWED_FACTORS))
+        if unknown_factors:
+            raise ConfigError(f"unknown factors for v1 registry: {unknown_factors}")
         assert_no_forbidden_config_keys(self.metadata.keys())
         ReadOnlyExchangePolicy(
             allow_private_read=self.allow_private_read,

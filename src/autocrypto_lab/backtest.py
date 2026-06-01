@@ -17,31 +17,50 @@ def max_drawdown(returns: list[float]) -> float:
     return worst
 
 
+def is_labeled(row: dict[str, Any]) -> bool:
+    return bool(row.get("label_available", True)) and row.get("label_timestamp", row["timestamp"]) > row["timestamp"]
+
+
 def run_long_short(rows: list[dict[str, Any]], factor: str, fee_bps: float = 5.0, slippage_bps: float = 2.0) -> dict[str, Any]:
-    usable = [row for row in rows if "forward_return" in row and factor in row]
-    if len(usable) < 2:
-        return {"periods": 0, "gross_return": 0.0, "net_return": 0.0, "volatility": 0.0, "max_drawdown": 0.0, "turnover": 0.0}
-    ranked = sorted(usable, key=lambda row: row[factor])
-    short = ranked[0]
-    long = ranked[-1]
-    gross = float(long["forward_return"]) - float(short["forward_return"])
-    cost = 2.0 * (fee_bps + slippage_bps) / 10_000.0
-    net = gross - cost
+    usable = [row for row in rows if "forward_return" in row and factor in row and is_labeled(row)]
+    by_timestamp: dict[Any, list[dict[str, Any]]] = {}
+    for row in usable:
+        by_timestamp.setdefault(row["timestamp"], []).append(row)
+    gross_returns: list[float] = []
+    net_returns: list[float] = []
+    long_symbols: list[str] = []
+    short_symbols: list[str] = []
+    per_period_cost = 2.0 * (fee_bps + slippage_bps) / 10_000.0
+    for timestamp in sorted(by_timestamp):
+        cohort = by_timestamp[timestamp]
+        if len(cohort) < 2:
+            continue
+        ranked = sorted(cohort, key=lambda row: row[factor])
+        short = ranked[0]
+        long = ranked[-1]
+        gross = float(long["forward_return"]) - float(short["forward_return"])
+        gross_returns.append(gross)
+        net_returns.append(gross - per_period_cost)
+        long_symbols.append(long["symbol"])
+        short_symbols.append(short["symbol"])
+    if not net_returns:
+        return {"periods": 0, "gross_return": 0.0, "net_return": 0.0, "volatility": 0.0, "max_drawdown": 0.0, "turnover": 0.0, "long_symbol": "n/a", "short_symbol": "n/a", "cost": 0.0}
+    cost = per_period_cost * len(net_returns)
     return {
-        "periods": 1,
-        "gross_return": gross,
-        "net_return": net,
-        "volatility": pstdev([gross, net]),
-        "max_drawdown": max_drawdown([net]),
-        "turnover": 2.0,
-        "long_symbol": long["symbol"],
-        "short_symbol": short["symbol"],
+        "periods": len(net_returns),
+        "gross_return": sum(gross_returns),
+        "net_return": sum(net_returns),
+        "volatility": pstdev(net_returns) if len(net_returns) > 1 else 0.0,
+        "max_drawdown": max_drawdown(net_returns),
+        "turnover": 2.0 * len(net_returns),
+        "long_symbol": ",".join(long_symbols),
+        "short_symbol": ",".join(short_symbols),
         "cost": cost,
     }
 
 
 def information_coefficient(rows: list[dict[str, Any]], factor: str) -> float:
-    usable = [row for row in rows if factor in row and "forward_return" in row]
+    usable = [row for row in rows if factor in row and "forward_return" in row and is_labeled(row)]
     if len(usable) < 2:
         return 0.0
     f_mean = mean([row[factor] for row in usable])
@@ -55,7 +74,7 @@ def information_coefficient(rows: list[dict[str, Any]], factor: str) -> float:
 
 
 def quantile_returns(rows: list[dict[str, Any]], factor: str, buckets: int = 3) -> dict[str, float]:
-    usable = sorted([row for row in rows if factor in row and "forward_return" in row], key=lambda row: row[factor])
+    usable = sorted([row for row in rows if factor in row and "forward_return" in row and is_labeled(row)], key=lambda row: row[factor])
     if not usable:
         return {}
     out: dict[str, float] = {}

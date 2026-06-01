@@ -9,7 +9,7 @@ T = TypeVar("T")
 
 
 class RegistryError(KeyError):
-    pass
+    """Raised when a declarative registry lookup or registration is invalid."""
 
 
 @dataclass

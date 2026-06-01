@@ -40,9 +40,11 @@ def add_forward_returns(rows: list[dict[str, Any]], horizon: int = 1) -> list[di
                 fut = symbol_rows[idx + horizon]["close"]
                 enriched["forward_return"] = fut / row["close"] - 1.0
                 enriched["label_timestamp"] = symbol_rows[idx + horizon]["timestamp"]
+                enriched["label_available"] = True
             else:
                 enriched["forward_return"] = 0.0
                 enriched["label_timestamp"] = row["timestamp"]
+                enriched["label_available"] = False
             out.append(enriched)
     return sorted(out, key=lambda item: (item["symbol"], item["timestamp"]))
 
@@ -65,10 +67,8 @@ def add_volatility(rows: list[dict[str, Any]], lookback: int = 3) -> list[dict[s
     return sorted(out, key=lambda item: (item["symbol"], item["timestamp"]))
 
 
-try:
+if "momentum" not in factor_registry.names():
     factor_registry.register("momentum", add_momentum)
-except Exception:
-    pass
 
 
 def add_reversal(rows: list[dict[str, Any]], lookback: int = 1) -> list[dict[str, Any]]:
@@ -120,7 +120,5 @@ for _name, _fn in {
     "flow": add_flow,
     "derivatives_pressure": add_derivatives_pressure,
 }.items():
-    try:
+    if _name not in factor_registry.names():
         factor_registry.register(_name, _fn)
-    except Exception:
-        pass

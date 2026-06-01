@@ -6,7 +6,7 @@ from typing import Any
 
 
 class PointInTimeError(AssertionError):
-    pass
+    """Raised when feature/label timestamps violate point-in-time semantics."""
 
 
 def validate_feature_label_order(rows: list[dict[str, Any]]) -> None:

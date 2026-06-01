@@ -24,6 +24,13 @@ def test_rejects_unknown_symbol():
         load_config({"run_id": "bad", "symbols": ["DOGE"]})
 
 
+def test_rejects_unknown_factor_and_model():
+    with pytest.raises(ConfigError, match="unknown factors"):
+        load_config({"run_id": "bad", "factors": ["arbitrary_python"]})
+    with pytest.raises(ConfigError, match="unknown model"):
+        load_config({"run_id": "bad", "model": "opaque_ai_model"})
+
+
 def test_registry_rejects_duplicate_and_unknown():
     reg = Registry("demo")
     reg.register("x", object())
