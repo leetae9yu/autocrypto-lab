@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:40:09.110268Z",
+  "updatedAt": "2026-06-01T04:41:18.439Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -11,10 +11,12 @@
       "id": "G001-project-skeleton",
       "title": "Project skeleton and CLI smoke",
       "objective": "Create package layout, CLI entrypoint, sample fixtures, CI/test baseline; prove CLI help/import tests pass.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:41:18.439Z",
+      "completedAt": "2026-06-01T04:41:18.439Z",
+      "evidence": "G001: package skeleton, CLI entrypoint, sample OHLCV fixture, pytest CLI smoke: 3 passed"
     },
     {
       "id": "G002-safety-boundary",

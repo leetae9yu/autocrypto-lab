@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autocrypto-lab"
+version = "0.1.0"
+description = "Local-first crypto quant research pipeline with config-only autonomous loop guardrails."
+requires-python = ">=3.9"
+readme = "README.md"
+authors = [{ name = "Autocrypto Lab" }]
+
+[project.scripts]
+autocrypto = "autocrypto_lab.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
