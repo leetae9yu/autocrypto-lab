@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:47:02.481Z",
+  "updatedAt": "2026-06-01T04:47:47.954Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -99,10 +99,12 @@
       "id": "G009-etf-event-registry",
       "title": "Sourced ETF event/window registry",
       "objective": "Create source-backed event registry for ETF approval/trading/stabilization windows with metadata tests.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:47:47.954Z",
+      "completedAt": "2026-06-01T04:47:47.954Z",
+      "evidence": "G009: sourced SEC/Nasdaq/Cboe ETF event registry with approval/trading/stabilization windows; pytest 28 passed"
     },
     {
       "id": "G010-regime-report",
