@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T07:25:19.290Z",
-  "updatedAt": "2026-06-01T07:28:38.184Z",
+  "updatedAt": "2026-06-01T07:30:32.594Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -44,17 +44,23 @@
       "id": "G002-cpu-walk-forward-score-models",
       "title": "CPU walk-forward score model families",
       "objective": "Implement equal-weight and sign-weight walk-forward score models under the existing artifact contract. Tests prove out-of-sample scoring and artifact metadata.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T07:25:19.290Z",
-      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "updatedAt": "2026-06-01T07:30:32.594Z",
       "commitIntent": "Add CPU-friendly walk-forward score models",
       "acceptanceCriteria": [
         "Weighted/equal/sign model families share the walk-forward no-leakage contract.",
         "Artifacts expose the selected model_type and fold metadata.",
         "Tests cover model family behavior and pipeline propagation."
       ],
-      "evidence": []
+      "evidence": [
+        "Added CPU walk-forward model families: correlation-weighted, equal-weight, and sign-weight score models.",
+        "Public Binance pipeline propagates configured CPU model_family into model artifact and manifest metadata.",
+        "Out-of-sample walk-forward train/test contract remains enforced for all families.",
+        "Verification: python3 -m pytest tests/test_factor_models.py tests/test_public_binance_pipeline.py -q (9 passed); python3 -m pytest -q (79 passed); python3 -m compileall -q src tests."
+      ],
+      "completedAt": "2026-06-01T07:30:32.594Z"
     },
     {
       "id": "G003-config-only-candidate-generator",

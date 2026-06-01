@@ -11,6 +11,13 @@ from typing import Any
 
 from autocrypto_lab.manifest import stable_hash
 
+WEIGHT_MODE_BY_MODEL_FAMILY = {
+    "walk_forward_weighted_score": "correlation",
+    "walk_forward_equal_weight_score": "equal",
+    "walk_forward_sign_weight_score": "sign",
+}
+STATIC_WEIGHT_MODES = ("correlation", "equal", "sign")
+
 
 @dataclass(frozen=True)
 class FactorModelArtifact:
@@ -67,19 +74,36 @@ def fit_weighted_score_model(
     features: list[str],
     target: str = "forward_return",
     model_id: str = "weighted_score_v1",
+    weight_mode: str = "correlation",
+    model_type: str = "weighted_score",
 ) -> FactorModelArtifact:
     if not features:
         raise ValueError("at least one feature is required")
-    weights = {feature: _corr(rows, feature, target) for feature in features}
-    if not any(abs(weight) > 0 for weight in weights.values()):
+    if weight_mode not in STATIC_WEIGHT_MODES:
+        raise ValueError(f"unknown CPU-friendly weight_mode: {weight_mode}")
+    feature_ic = {feature: _corr(rows, feature, target) for feature in features}
+    if weight_mode == "equal":
         weights = {feature: 1.0 / len(features) for feature in features}
+    elif weight_mode == "sign":
+        non_zero = [feature for feature, corr in feature_ic.items() if abs(corr) > 0]
+        if non_zero:
+            weights = {
+                feature: ((1.0 if feature_ic[feature] > 0 else -1.0) / len(non_zero) if feature in non_zero else 0.0)
+                for feature in features
+            }
+        else:
+            weights = {feature: 1.0 / len(features) for feature in features}
+    else:
+        weights = dict(feature_ic)
+        if not any(abs(weight) > 0 for weight in weights.values()):
+            weights = {feature: 1.0 / len(features) for feature in features}
     train_rows = [row for row in rows if row.get("label_available", True)]
     timestamps = [row["timestamp"] for row in train_rows if "timestamp" in row]
     train_window = {"start": min(timestamps) if timestamps else None, "end": max(timestamps) if timestamps else None}
-    metrics = {"feature_ic": weights, "n_train": len(train_rows)}
+    metrics = {"feature_ic": feature_ic, "weight_mode": weight_mode, "n_train": len(train_rows)}
     artifact = FactorModelArtifact(
         model_id=model_id,
-        model_type="weighted_score",
+        model_type=model_type,
         features=list(features),
         weights=weights,
         train_window=train_window,
@@ -107,8 +131,12 @@ def fit_walk_forward_weighted_score_model(
     train_periods: int = 24,
     test_periods: int = 6,
     step_periods: int | None = None,
+    model_family: str = "walk_forward_weighted_score",
 ) -> tuple[FactorModelArtifact, list[dict[str, Any]]]:
     """Fit factor weights on rolling train windows and score only later test windows."""
+    if model_family not in WEIGHT_MODE_BY_MODEL_FAMILY:
+        raise ValueError(f"unknown CPU-friendly walk-forward model family: {model_family}")
+    weight_mode = WEIGHT_MODE_BY_MODEL_FAMILY[model_family]
     if train_periods < 1 or test_periods < 1:
         raise ValueError("walk-forward train_periods and test_periods must be positive")
     step = step_periods or test_periods
@@ -135,7 +163,14 @@ def fit_walk_forward_weighted_score_model(
         ]
         test_rows = [row for row in rows if row["timestamp"] in test_set]
         if train_rows and test_rows:
-            fold_model = fit_weighted_score_model(train_rows, features=features, target=target, model_id=f"{model_id}_fold_{fold_idx}")
+            fold_model = fit_weighted_score_model(
+                train_rows,
+                features=features,
+                target=target,
+                model_id=f"{model_id}_fold_{fold_idx}",
+                weight_mode=weight_mode,
+                model_type=model_family,
+            )
             fold_weights.append(fold_model.weights)
             for scored in score_model(test_rows, fold_model):
                 scored_rows.append(
@@ -173,14 +208,16 @@ def fit_walk_forward_weighted_score_model(
     eval_window = {"start": folds[0]["test_start"], "end": folds[-1]["test_end"]}
     artifact = FactorModelArtifact(
         model_id=model_id,
-        model_type="walk_forward_weighted_score",
+        model_type=model_family,
         features=list(features),
         weights=average_weights,
         train_window=train_window,
         eval_window=eval_window,
-        input_hash=stable_hash({"rows": rows, "features": features, "train_periods": train_periods, "test_periods": test_periods, "step_periods": step}),
+        input_hash=stable_hash({"rows": rows, "features": features, "model_family": model_family, "train_periods": train_periods, "test_periods": test_periods, "step_periods": step}),
         metrics={
             "walk_forward": True,
+            "model_family": model_family,
+            "weight_mode": weight_mode,
             "train_periods": train_periods,
             "test_periods": test_periods,
             "step_periods": step,

@@ -37,6 +37,37 @@ def test_weighted_score_model_produces_artifact_and_scores():
     assert all("signal_score" in row and row["model_id"] == "pytest_model" for row in scored)
 
 
+def test_equal_weight_score_model_uses_uniform_cpu_weights():
+    rows = feature_rows()
+    model = fit_weighted_score_model(
+        rows,
+        features=["momentum", "volatility", "derivatives_pressure"],
+        model_id="equal_model",
+        weight_mode="equal",
+        model_type="walk_forward_equal_weight_score",
+    )
+
+    assert model.model_type == "walk_forward_equal_weight_score"
+    assert model.metrics["weight_mode"] == "equal"
+    assert model.weights == {"momentum": 1 / 3, "volatility": 1 / 3, "derivatives_pressure": 1 / 3}
+
+
+def test_sign_weight_score_model_uses_correlation_sign_only():
+    rows = feature_rows()
+    model = fit_weighted_score_model(
+        rows,
+        features=["momentum", "derivatives_pressure"],
+        model_id="sign_model",
+        weight_mode="sign",
+        model_type="walk_forward_sign_weight_score",
+    )
+
+    assert model.model_type == "walk_forward_sign_weight_score"
+    assert model.metrics["weight_mode"] == "sign"
+    assert set(model.weights) == {"momentum", "derivatives_pressure"}
+    assert all(weight in {-1.0, -0.5, 0.0, 0.5, 1.0} for weight in model.weights.values())
+
+
 def test_model_artifacts_are_persisted_with_signal_output(tmp_path: Path):
     rows = feature_rows()
     model = fit_weighted_score_model(rows, features=["momentum", "derivatives_pressure"], model_id="persisted_model")
@@ -72,4 +103,22 @@ def test_walk_forward_model_scores_only_out_of_sample_windows():
     assert model.metrics["folds"][0]["n_train"] == 2
     assert scored
     assert all(row["model_id"] == "wf_model" for row in scored)
+    assert all(row["test_start"] > row["train_end"] for row in scored)
+
+
+def test_walk_forward_equal_model_family_preserves_oos_contract():
+    rows = feature_rows()
+    model, scored = fit_walk_forward_weighted_score_model(
+        rows,
+        features=["momentum", "derivatives_pressure"],
+        model_id="wf_equal",
+        train_periods=2,
+        test_periods=1,
+        model_family="walk_forward_equal_weight_score",
+    )
+
+    assert model.model_type == "walk_forward_equal_weight_score"
+    assert model.metrics["weight_mode"] == "equal"
+    assert model.metrics["folds"][0]["weights"] == {"momentum": 0.5, "derivatives_pressure": 0.5}
+    assert scored
     assert all(row["test_start"] > row["train_end"] for row in scored)

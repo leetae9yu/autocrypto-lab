@@ -72,3 +72,27 @@ def test_public_binance_pipeline_downloads_normalizes_and_backtests(tmp_path: Pa
     assert model["metrics"]["walk_forward"] is True
     signals = json.loads(outputs["signals"].read_text())
     assert signals and all(row["test_start"] > row["train_end"] for row in signals)
+
+
+def test_public_binance_pipeline_propagates_cpu_model_family(tmp_path: Path):
+    outputs = run_public_binance_pipeline(
+        tmp_path,
+        {
+            "run_id": "fake_live_equal",
+            "symbols": ["BTC", "ETH"],
+            "interval": "1h",
+            "factors": ["momentum", "derivatives_pressure"],
+            "model": "walk_forward_equal_weight_score",
+        },
+        start=ts(0),
+        end=ts(3),
+        adapter=FakeBinanceAdapter(),
+        train_periods=2,
+        test_periods=1,
+    )
+
+    manifest = json.loads(outputs["manifest"].read_text())
+    model = json.loads(outputs["model"].read_text())
+    assert manifest["source_metadata"]["model_family"] == "walk_forward_equal_weight_score"
+    assert model["model_type"] == "walk_forward_equal_weight_score"
+    assert model["metrics"]["weight_mode"] == "equal"

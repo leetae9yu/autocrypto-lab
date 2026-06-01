@@ -12,7 +12,7 @@ from autocrypto_lab.config import load_config
 from autocrypto_lab.data import load_ohlcv_csv
 from autocrypto_lab.factors import add_forward_returns, apply_factor_dsl, build_public_futures_feature_table
 from autocrypto_lab.manifest import RunManifest, stable_hash, write_manifest
-from autocrypto_lab.models import fit_walk_forward_weighted_score_model, fit_weighted_score_model, score_model, write_model_artifacts
+from autocrypto_lab.models import WEIGHT_MODE_BY_MODEL_FAMILY, fit_walk_forward_weighted_score_model, fit_weighted_score_model, score_model, write_model_artifacts
 from autocrypto_lab.pit import validate_feature_label_order
 from autocrypto_lab.report import write_markdown_report
 from autocrypto_lab.regime import write_regime_report
@@ -367,13 +367,15 @@ def run_public_binance_pipeline(
         featured,
         {"source": "binance_usdm_public", "start": start.isoformat(), "end": end.isoformat(), "interval": cfg.interval},
     )
+    selected_model_family = cfg.model if cfg.model in WEIGHT_MODE_BY_MODEL_FAMILY else "walk_forward_weighted_score"
     model, scored = fit_walk_forward_weighted_score_model(
         featured,
         features=[spec["name"] for spec in features],
-        model_id=f"{cfg.run_id}_walk_forward_weighted_score",
+        model_id=f"{cfg.run_id}_{selected_model_family}",
         train_periods=train_periods,
         test_periods=test_periods,
         step_periods=step_periods,
+        model_family=selected_model_family,
     )
     model_dir = output_dir / "models"
     persisted_model = write_model_artifacts(model_dir, model, scored)
@@ -412,6 +414,7 @@ def run_public_binance_pipeline(
                 "start": start.isoformat(),
                 "end": end.isoformat(),
                 "walk_forward": {"train_periods": train_periods, "test_periods": test_periods, "step_periods": step_periods or test_periods},
+                "model_family": selected_model_family,
                 "factor_specs": features,
                 "public_only": True,
                 "artifact_lineage": artifact_lineage,
