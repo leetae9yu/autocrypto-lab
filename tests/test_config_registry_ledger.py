@@ -31,6 +31,15 @@ def test_rejects_unknown_factor_and_model():
         load_config({"run_id": "bad", "model": "opaque_ai_model"})
 
 
+def test_public_only_config_rejects_private_reads_and_credentials():
+    cfg = load_config({"run_id": "public", "public_only": True, "allow_private_read": False})
+    assert cfg.public_only is True
+    with pytest.raises(Exception, match="public-only"):
+        load_config({"run_id": "bad", "public_only": True})
+    with pytest.raises(Exception, match="private"):
+        load_config({"run_id": "bad", "metadata": {"api_key": "nope"}})
+
+
 def test_registry_rejects_duplicate_and_unknown():
     reg = Registry("demo")
     reg.register("x", object())

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T05:51:26.521Z",
-  "updatedAt": "2026-06-01T05:51:47.640988Z",
+  "updatedAt": "2026-06-01T05:52:58.432340Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -11,10 +11,12 @@
       "id": "G001-public-only-boundary",
       "title": "Public-only phase safety boundary",
       "objective": "Extend config/safety tests so the next phase rejects API keys, secrets, private reads, signed/private/order/leverage/margin routes, exchange POST/DELETE actions, and preserves >=1h cadence/no-trade scope.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:51:47.640988Z"
+      "updatedAt": "2026-06-01T05:52:58.432340Z",
+      "completedAt": "2026-06-01T05:52:58.432340Z",
+      "evidence": "G001: public_only config/policy rejects private reads, API credentials, signed/private/order routes, exchange POST/DELETE; pytest 46 passed; compileall pass"
     },
     {
       "id": "G002-public-futures-adapters",

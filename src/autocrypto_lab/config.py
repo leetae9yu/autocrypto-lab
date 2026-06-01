@@ -28,6 +28,7 @@ class ExperimentConfig:
     slippage_bps: float = 2.0
     allow_private_read: bool = True
     allow_trading: bool = False
+    public_only: bool = False
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     @property
@@ -61,6 +62,7 @@ class ExperimentConfig:
             allow_private_read=self.allow_private_read,
             allow_trading=self.allow_trading,
             minimum_cadence_minutes=self.cadence_minutes,
+            public_only=self.public_only,
         ).validate()
 
     def factor_specs(self) -> list[dict[str, Any]]:
@@ -97,6 +99,7 @@ def load_config(raw: Mapping[str, Any]) -> ExperimentConfig:
         slippage_bps=float(raw.get("slippage_bps", 2.0)),
         allow_private_read=bool(raw.get("allow_private_read", True)),
         allow_trading=bool(raw.get("allow_trading", False)),
+        public_only=bool(raw.get("public_only", False)),
         metadata=dict(raw.get("metadata", {})),
     )
     cfg.validate()
