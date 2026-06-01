@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local config / secrets
+.env
+.env.*
+!.env.example
+
+# Runtime research artifacts
+data/
+experiments/
+site/
+reports/generated/
+*.parquet
+*.duckdb
+*.sqlite
+*.db
+
+# OMX runtime noise (keep durable planning/spec artifacts tracked explicitly)
+.omx/logs/
+.omx/state/
+.omx/metrics.json
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
