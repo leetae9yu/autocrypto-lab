@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:49:10.046Z",
+  "updatedAt": "2026-06-01T04:49:42.452Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -132,10 +132,12 @@
       "id": "G012-dashboard-demo",
       "title": "Minimal dashboard demo",
       "objective": "Expose reports, runs, and ledger state in a lightweight dashboard smoke-tested on local artifacts.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:49:42.452Z",
+      "completedAt": "2026-06-01T04:49:42.452Z",
+      "evidence": "G012: lightweight local HTML dashboard renders reports and autonomous ledger; pytest 35 passed"
     },
     {
       "id": "G013-e2e-polish",

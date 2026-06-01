@@ -1,0 +1,30 @@
+from pathlib import Path
+
+from autocrypto_lab.dashboard import render_dashboard, write_dashboard
+from autocrypto_lab.ledger import LedgerEntry, append_ledger
+
+
+def test_dashboard_renders_report_and_ledger(tmp_path: Path):
+    report = tmp_path / "report.md"
+    report.write_text("# report")
+    ledger = tmp_path / "ledger.jsonl"
+    append_ledger(ledger, LedgerEntry(
+        run_id="r1",
+        hypothesis="test hypothesis",
+        config_hash="abc",
+        rationale="because",
+        metrics={"net_return": 0.1},
+        decision="continue",
+        evidence="fixture",
+    ))
+    html = render_dashboard([report], ledger)
+    assert "Autocrypto Lab Dashboard" in html
+    assert "report.md" in html
+    assert "test hypothesis" in html
+    assert "not investment advice" in html.lower()
+
+
+def test_write_dashboard(tmp_path: Path):
+    path = tmp_path / "site" / "index.html"
+    write_dashboard(path, [], tmp_path / "missing.jsonl")
+    assert path.exists()
