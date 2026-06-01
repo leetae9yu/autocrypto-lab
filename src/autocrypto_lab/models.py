@@ -525,6 +525,8 @@ def fit_walk_forward_sklearn_regressor_model(
     }
     train_window = {"start": folds[0]["train_start"], "end": folds[-1]["train_end"]}
     eval_window = {"start": folds[0]["test_start"], "end": folds[-1]["test_end"]}
+    sample_estimator = _estimator_leaf(_build_cpu_regressor(model_family, params, 0))
+    estimator_name = f"{sample_estimator.__class__.__module__}.{sample_estimator.__class__.__name__}"
     artifact = FactorModelArtifact(
         model_id=model_id,
         model_type=model_family,
@@ -546,9 +548,7 @@ def fit_walk_forward_sklearn_regressor_model(
         metrics={
             "walk_forward": True,
             "model_family": model_family,
-            "estimator": _estimator_leaf(_build_cpu_regressor(model_family, params, 0)).__class__.__module__
-            + "."
-            + _estimator_leaf(_build_cpu_regressor(model_family, params, 0)).__class__.__name__,
+            "estimator": estimator_name,
             "model_params": params,
             "train_periods": train_periods,
             "test_periods": test_periods,
