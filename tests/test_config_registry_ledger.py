@@ -61,6 +61,11 @@ def test_ledger_roundtrip(tmp_path: Path):
         metrics={"net_return": 0.01},
         decision="continue",
         evidence="pytest fixture",
+        raw_data_snapshot_ids=["raw1"],
+        normalized_data_snapshot_ids=["norm1"],
+        feature_table_id="features1",
+        model_artifact_id="model1",
+        signal_artifact_id="signals1",
     )
     append_ledger(path, entry)
     rows = read_ledger(path)

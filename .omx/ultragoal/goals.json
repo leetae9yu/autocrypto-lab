@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T05:51:26.521Z",
-  "updatedAt": "2026-06-01T05:57:59.253310Z",
+  "updatedAt": "2026-06-01T05:59:02.964276Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -77,10 +77,12 @@
       "id": "G007-autonomous-loop",
       "title": "Autonomous config-only experiment loop",
       "objective": "Run repeated bounded config-only experiments that propose variants, execute model/backtests, rank Pareto diagnostics, and ledger full provenance including data/feature/model/signal artifact ids.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:51:47.640988Z"
+      "updatedAt": "2026-06-01T05:59:02.964276Z",
+      "completedAt": "2026-06-01T05:59:02.964276Z",
+      "evidence": "G007: repeated config-only autonomous loop records config diff/hash/snapshot plus raw/normalized/feature/model/signal artifact ids and decisions; pytest 60 passed; compileall pass"
     },
     {
       "id": "G008-cli-docs-e2e",

@@ -48,9 +48,18 @@ def pareto_decision(candidate: dict[str, float], baseline: dict[str, float]) -> 
     return "defer"
 
 
-def run_dry_iteration(ledger_path: Path, config: dict[str, Any], baseline: dict[str, float], candidate: dict[str, float], hypothesis: str) -> dict[str, Any]:
+def run_dry_iteration(
+    ledger_path: Path,
+    config: dict[str, Any],
+    baseline: dict[str, float],
+    candidate: dict[str, float],
+    hypothesis: str,
+    *,
+    artifact_ids: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     variant = propose_config_variant(config, hypothesis)
     decision = pareto_decision(candidate, baseline)
+    artifacts = artifact_ids or {}
     entry = LedgerEntry(
         run_id=variant["run_id"],
         hypothesis=hypothesis,
@@ -61,6 +70,34 @@ def run_dry_iteration(ledger_path: Path, config: dict[str, Any], baseline: dict[
         metrics=candidate,
         decision=decision,
         evidence="dry-run metrics supplied by fixture test",
+        raw_data_snapshot_ids=list(artifacts.get("raw_data_snapshot_ids", [])),
+        normalized_data_snapshot_ids=list(artifacts.get("normalized_data_snapshot_ids", [])),
+        feature_table_id=str(artifacts.get("feature_table_id", "")),
+        model_artifact_id=str(artifacts.get("model_artifact_id", "")),
+        signal_artifact_id=str(artifacts.get("signal_artifact_id", "")),
     )
     append_ledger(ledger_path, entry)
     return {"variant": variant, "decision": decision, "config_hash": entry.config_hash}
+
+
+def run_autonomous_config_loop(
+    ledger_path: Path,
+    base_config: dict[str, Any],
+    baseline: dict[str, float],
+    candidates: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Run bounded config-only experiments supplied by a deterministic runner."""
+    results: list[dict[str, Any]] = []
+    current = copy.deepcopy(base_config)
+    for idx, candidate in enumerate(candidates, start=1):
+        hypothesis = str(candidate["hypothesis"])
+        metrics = dict(candidate["metrics"])
+        artifacts = dict(candidate.get("artifact_ids", {}))
+        variant_seed = {**current, "run_id": f"{base_config.get('run_id', 'run')}_agent_{idx}"}
+        result = run_dry_iteration(ledger_path, variant_seed, baseline, metrics, hypothesis, artifact_ids=artifacts)
+        results.append(result)
+        if result["decision"] == "adopt":
+            current = result["variant"]
+        if result["decision"] == "stop":
+            break
+    return results

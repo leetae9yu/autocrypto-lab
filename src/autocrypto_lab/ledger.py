@@ -22,6 +22,11 @@ class LedgerEntry:
     metrics: dict[str, Any]
     decision: Decision
     evidence: str
+    raw_data_snapshot_ids: list[str] = field(default_factory=list)
+    normalized_data_snapshot_ids: list[str] = field(default_factory=list)
+    feature_table_id: str = ""
+    model_artifact_id: str = ""
+    signal_artifact_id: str = ""
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def validate(self) -> None:
