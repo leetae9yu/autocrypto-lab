@@ -137,11 +137,13 @@ def evaluate_candidate_configs(
     train_periods: int = 24,
     test_periods: int = 6,
     step_periods: int | None = None,
+    ledger_path: Path | None = None,
 ) -> dict[str, Any]:
     """Evaluate generated candidates through the real public walk-forward pipeline."""
     output_dir.mkdir(parents=True, exist_ok=True)
     candidates = generate_candidate_configs(base_config, max_candidates=max_candidates)
     evaluations: list[dict[str, Any]] = []
+    ledger_path = ledger_path or output_dir / "agent_ledger.jsonl"
     for candidate in candidates:
         candidate_config = copy.deepcopy(candidate["config"])
         candidate_dir = output_dir / candidate["candidate_id"]
@@ -172,16 +174,71 @@ def evaluate_candidate_configs(
                 "metrics": metrics,
             }
         )
+    ranked = sorted(
+        evaluations,
+        key=lambda row: (
+            float(row["metrics"].get("net_return_after_funding", row["metrics"].get("net_return", 0.0))),
+            float(row["metrics"].get("max_drawdown", -1.0)),
+            -float(row["metrics"].get("turnover", 999.0)),
+        ),
+        reverse=True,
+    )
+    pareto_ranks = {row["candidate_id"]: rank for rank, row in enumerate(ranked, start=1)}
+    baseline_metrics = evaluations[0]["metrics"] if evaluations else {}
+    for row in evaluations:
+        decision = pareto_decision(row["metrics"], baseline_metrics)
+        pareto_rank = pareto_ranks[row["candidate_id"]]
+        if pareto_rank == 1 and decision == "continue":
+            rationale = "top Pareto-ranked diagnostics are viable but not strictly better than the baseline candidate"
+        elif decision == "adopt":
+            rationale = "candidate improves return/drawdown diagnostics versus baseline within turnover guardrail"
+        elif decision == "continue":
+            rationale = "candidate has usable IC/quantile diagnostics but is not a clear Pareto improvement"
+        else:
+            rationale = "candidate lacks enough robust diagnostics for adoption"
+        row["pareto_rank"] = pareto_rank
+        row["decision"] = decision
+        row["rationale"] = rationale
+        lineage = row["artifact_lineage"]
+        append_ledger(
+            ledger_path,
+            LedgerEntry(
+                run_id=row["run_id"],
+                parent_run_id=str(base_config.get("run_id", "run")),
+                candidate_id=row["candidate_id"],
+                hypothesis=row["hypothesis"],
+                config_hash=row["config_hash"],
+                config_diff=config_diff(base_config, row["config"]),
+                config_snapshot=row["config"],
+                rationale=rationale,
+                metrics=row["metrics"],
+                decision=decision,
+                evidence="public walk-forward candidate evaluation",
+                raw_data_snapshot_ids=list(lineage.get("raw_data_snapshot_ids", [])),
+                normalized_data_snapshot_ids=list(lineage.get("normalized_data_snapshot_ids", [])),
+                feature_table_id=str(lineage.get("feature_table_id", "")),
+                model_artifact_id=str(lineage.get("model_artifact_id", "")),
+                signal_artifact_id=str(lineage.get("signal_artifact_id", "")),
+                model_family=str(row["config"].get("model", "")),
+                hyperparameters=dict(row["config"].get("model_params", {})),
+                pareto_rank=pareto_rank,
+                report_path=row["artifact_paths"].get("report", ""),
+                dashboard_path=row["artifact_paths"].get("dashboard", ""),
+                manifest_path=row["artifact_paths"].get("manifest", ""),
+            ),
+        )
     summary = {
         "base_run_id": str(base_config.get("run_id", "run")),
         "start": start.isoformat(),
         "end": end.isoformat(),
         "candidate_count": len(evaluations),
+        "best_candidate_id": ranked[0]["candidate_id"] if ranked else "",
+        "ledger_path": str(ledger_path),
         "evaluations": evaluations,
     }
     summary_path = output_dir / "candidate_evaluations.json"
-    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True, default=str), encoding="utf-8")
     summary["summary_path"] = str(summary_path)
+    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True, default=str), encoding="utf-8")
     return summary
 
 

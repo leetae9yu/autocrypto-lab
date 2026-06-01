@@ -27,6 +27,14 @@ class LedgerEntry:
     feature_table_id: str = ""
     model_artifact_id: str = ""
     signal_artifact_id: str = ""
+    candidate_id: str = ""
+    parent_run_id: str = ""
+    model_family: str = ""
+    hyperparameters: dict[str, Any] = field(default_factory=dict)
+    pareto_rank: int = 0
+    report_path: str = ""
+    dashboard_path: str = ""
+    manifest_path: str = ""
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def validate(self) -> None:

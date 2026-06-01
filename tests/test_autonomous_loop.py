@@ -83,7 +83,9 @@ def test_evaluate_candidate_configs_runs_real_walk_forward_pipeline(tmp_path: Pa
     )
 
     assert summary["candidate_count"] == 2
+    assert summary["best_candidate_id"]
     assert Path(summary["summary_path"]).exists()
+    assert Path(summary["ledger_path"]).exists()
     assert [row["candidate_id"] for row in summary["evaluations"]] == [
         "candidate_001_weighted_score_baseline",
         "candidate_002_equal_weight_robustness",
@@ -94,6 +96,16 @@ def test_evaluate_candidate_configs_runs_real_walk_forward_pipeline(tmp_path: Pa
         assert row["artifact_lineage"]["model_artifact_id"]
         assert row["metrics"]["factor_model"].startswith(row["run_id"])
         assert row["walk_forward"] == {"train_periods": 2, "test_periods": 1, "step_periods": None}
+        assert row["decision"] in {"adopt", "continue", "defer"}
+        assert row["pareto_rank"] in {1, 2}
+    ledger_rows = read_ledger(Path(summary["ledger_path"]))
+    assert len(ledger_rows) == 2
+    assert ledger_rows[0]["candidate_id"] == "candidate_001_weighted_score_baseline"
+    assert ledger_rows[0]["parent_run_id"] == "agent_eval"
+    assert ledger_rows[0]["model_family"] == "walk_forward_weighted_score"
+    assert ledger_rows[0]["manifest_path"].endswith("manifest.json")
+    assert ledger_rows[0]["dashboard_path"].endswith("dashboard.html")
+    assert ledger_rows[0]["pareto_rank"] in {1, 2}
 
 
 def test_dry_iteration_writes_required_ledger_fields(tmp_path: Path):

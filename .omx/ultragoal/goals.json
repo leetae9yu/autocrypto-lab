@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T07:25:19.290Z",
-  "updatedAt": "2026-06-01T07:33:37.907Z",
+  "updatedAt": "2026-06-01T07:34:56.804Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -109,17 +109,22 @@
       "id": "G005-autonomous-ledger-and-summary",
       "title": "Autonomous ledger and feedback summary",
       "objective": "Extend ledger/summary output to record candidate artifact lineage, metrics, decision, rationale, and Pareto ranking.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T07:25:19.290Z",
-      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "updatedAt": "2026-06-01T07:34:56.804Z",
       "commitIntent": "Ledger autonomous candidate feedback decisions",
       "acceptanceCriteria": [
         "Ledger records hypothesis, config diff, artifact lineage, metrics, Pareto rank, decision, and rationale per candidate.",
         "Summary identifies the best/deferred candidates without investment-advice claims.",
         "Artifact lineage is reproducible from manifest/report/dashboard paths."
       ],
-      "evidence": []
+      "evidence": [
+        "Candidate evaluator now writes agent_ledger.jsonl with candidate_id, parent_run_id, config_diff, artifact lineage, model_family, hyperparameters, metrics, decision, rationale, and pareto_rank.",
+        "candidate_evaluations.json summary includes best_candidate_id, ledger_path, decisions, rationale, metrics, and artifact paths.",
+        "Verification: python3 -m pytest tests/test_autonomous_loop.py tests/test_config_registry_ledger.py -q (23 passed); python3 -m pytest -q (83 passed); python3 -m compileall -q src tests."
+      ],
+      "completedAt": "2026-06-01T07:34:56.804Z"
     },
     {
       "id": "G006-agent-loop-cli-docs",
