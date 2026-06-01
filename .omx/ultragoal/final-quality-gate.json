@@ -1,22 +1,70 @@
 {
+  "ts": "2026-06-01T07:39:14.664Z",
   "aiSlopCleaner": {
     "status": "passed",
-    "evidence": "No masking fallback/slop found in runtime code or tests; only OMX planning prose matched fallback/compatibility scan. Review remediation tightened safety/config/PIT/model/backtest/ledger boundaries."
+    "scope": [
+      "src/autocrypto_lab/autonomous.py",
+      "src/autocrypto_lab/cli.py",
+      "src/autocrypto_lab/config.py",
+      "src/autocrypto_lab/ledger.py",
+      "src/autocrypto_lab/models.py",
+      "src/autocrypto_lab/pipeline.py",
+      "tests",
+      "README.md"
+    ],
+    "behaviorLock": "python3 -m pytest -q (84 passed) before/after cleanup patch",
+    "cleanupPlan": "Bounded final cleanup only: remove fragile metadata mapping assumption; no broad refactor.",
+    "fallbackFindings": "No quick hack/TODO/FIXME/fallback-like scan findings in src/tests/README.",
+    "evidence": "AI_SLOP_SCAN_PASS_NO_FALLBACK_TODO_FINDINGS; targeted autonomous tests 9 passed; full pytest 84 passed."
   },
   "verification": {
     "status": "passed",
     "commands": [
       "python3 -m pytest -q",
-      "PYTHONPATH=src python3 -m autocrypto_lab.cli run-public-fixture --output-dir /tmp/autocrypto-final-public-smoke-v3 --run-id final_public_v3",
-      "PYTHONPATH=src python3 -m autocrypto_lab.cli run-sample --output-dir /tmp/autocrypto-final-sample-v3 --run-id final_sample_v3",
       "python3 -m compileall -q src tests",
-      "AST no-trade/no-signed-route scan"
+      "PYTHONPATH=src python3 -m autocrypto_lab.cli run-agent-loop --output-dir /tmp/autocrypto-agent-loop-smoke --run-id agent_loop_smoke --symbols BTC,ETH --interval 1h --lookback-hours 48 --train-periods 24 --test-periods 6 --max-candidates 2",
+      "AST no-trade/private-route safety scan",
+      "fallback/TODO slop scan"
     ],
-    "evidence": "67 passed; public fixture generated report/regime/dashboard/manifest/model/signals/feature_table; legacy sample generated artifacts; compileall passed; no forbidden trade/signed routes."
+    "evidence": "pytest 84 passed; compileall passed; real public Binance agent-loop smoke produced 2 candidates and 2 ledger rows; safety scan passed; slop scan passed.",
+    "realPublicSmoke": {
+      "summary": "/tmp/autocrypto-agent-loop-smoke/candidate_evaluations.json",
+      "ledger": "/tmp/autocrypto-agent-loop-smoke/agent_ledger.jsonl",
+      "candidateCount": 2,
+      "bestCandidateId": "candidate_001_weighted_score_baseline",
+      "candidates": [
+        {
+          "candidateId": "candidate_001_weighted_score_baseline",
+          "model": "walk_forward_weighted_score",
+          "rank": 1,
+          "decision": "continue",
+          "periods": 23
+        },
+        {
+          "candidateId": "candidate_002_equal_weight_robustness",
+          "model": "walk_forward_equal_weight_score",
+          "rank": 2,
+          "decision": "continue",
+          "periods": 23
+        }
+      ]
+    }
   },
   "codeReview": {
     "recommendation": "APPROVE",
     "architectStatus": "CLEAR",
-    "evidence": "Code-reviewer final recheck APPROVE after model_id all-row validation fix; architect final recheck CLEAR after safety/config/ledger/lineage fixes."
+    "filesReviewed": 15,
+    "critical": [],
+    "high": [],
+    "medium": [],
+    "low": [],
+    "evidence": "Reviewed diff b12db88..HEAD for config/model/evaluator/ledger/CLI/docs/tests. No hardcoded secrets, private/signed/order routes, trading methods, GPU/deep-learning dependencies, or unresolved architecture blockers found. Boundaries remain public-data adapter -> PIT features -> CPU model -> cost-aware backtest -> ledger/report artifacts."
+  },
+  "codexGoal": {
+    "threadId": "019e8163-278e-7242-b17e-35165f22ffc6",
+    "status": "complete",
+    "tokensUsed": 274169,
+    "timeUsedSeconds": 817,
+    "objective": "Implement the CPU-friendly autonomous research loop plan in .omx/plans/ralplan-cpu-friendly-autonomous-research-loop.md using .omx/ultragoal/goals.json as the durable story ledger; commit each story and preserve public-only/no-trade safety."
   }
 }

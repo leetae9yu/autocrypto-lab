@@ -6,7 +6,7 @@ import copy
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from autocrypto_lab.config import ALLOWED_CONFIG_KEYS, CPU_FRIENDLY_MODELS, load_config
 from autocrypto_lab.ledger import LedgerEntry, append_ledger
@@ -30,7 +30,11 @@ def _with_candidate_defaults(base_config: dict[str, Any], candidate_id: str, hyp
     candidate["public_only"] = True
     candidate["allow_private_read"] = False
     candidate["allow_trading"] = False
-    candidate.setdefault("metadata", {})["candidate_id"] = candidate_id
+    metadata = candidate.get("metadata", {})
+    if not isinstance(metadata, Mapping):
+        raise ValueError("base_config metadata must be a mapping")
+    candidate["metadata"] = dict(metadata)
+    candidate["metadata"]["candidate_id"] = candidate_id
     candidate["metadata"]["hypothesis"] = hypothesis
     return candidate
 

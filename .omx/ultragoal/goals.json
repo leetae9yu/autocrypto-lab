@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T07:25:19.290Z",
-  "updatedAt": "2026-06-01T07:36:11.783Z",
+  "updatedAt": "2026-06-01T07:39:14.664Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -152,10 +152,10 @@
       "id": "G007-final-verification-gate",
       "title": "Final safety and reproducibility gate",
       "objective": "Run deterministic tests, a small real public Binance smoke where possible, no-trade safety scan, cleanup/slop scan, code review, and final push.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T07:25:19.290Z",
-      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "updatedAt": "2026-06-01T07:39:14.664Z",
       "commitIntent": "Verify autonomous research loop safety and reproducibility",
       "acceptanceCriteria": [
         "Full deterministic pytest suite passes.",
@@ -163,7 +163,16 @@
         "Safety scan finds no private/signed/order routes or trading code.",
         "Final quality gate evidence is written to .omx/ultragoal/final-quality-gate.json."
       ],
-      "evidence": []
+      "evidence": [
+        "Full deterministic pytest suite passed: 84 passed.",
+        "compileall passed for src and tests.",
+        "Real API-key-free public Binance run-agent-loop smoke produced candidate_evaluations.json, agent_ledger.jsonl, 2 candidates, and isolated candidate artifacts.",
+        "No-trade/private-route AST safety scan passed.",
+        "AI slop/fallback/TODO scan passed; bounded cleanup removed fragile metadata mapping assumption.",
+        "Code-review recommendation APPROVE and architectStatus CLEAR recorded in .omx/ultragoal/final-quality-gate.json.",
+        "Codex aggregate goal marked complete: tokensUsed=274169, timeUsedSeconds=817."
+      ],
+      "completedAt": "2026-06-01T07:39:14.664Z"
     }
   ]
 }
