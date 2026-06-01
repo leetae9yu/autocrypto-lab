@@ -16,6 +16,8 @@ class LedgerEntry:
     run_id: str
     hypothesis: str
     config_hash: str
+    config_diff: dict[str, Any]
+    config_snapshot: dict[str, Any]
     rationale: str
     metrics: dict[str, Any]
     decision: Decision
@@ -23,7 +25,7 @@ class LedgerEntry:
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def validate(self) -> None:
-        missing = [name for name in ("run_id", "hypothesis", "config_hash", "rationale", "decision", "evidence") if not getattr(self, name)]
+        missing = [name for name in ("run_id", "hypothesis", "config_hash", "config_diff", "config_snapshot", "rationale", "decision", "evidence") if not getattr(self, name)]
         if missing:
             raise ValueError(f"ledger entry missing required fields: {missing}")
         if self.decision not in ("continue", "adopt", "defer", "stop"):

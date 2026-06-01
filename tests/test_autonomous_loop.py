@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from autocrypto_lab.autonomous import pareto_decision, propose_config_variant, run_dry_iteration
+from autocrypto_lab.autonomous import config_diff, pareto_decision, propose_config_variant, run_dry_iteration
 from autocrypto_lab.ledger import read_ledger
 
 
@@ -18,6 +18,12 @@ def test_pareto_decision_rejects_single_metric_without_diagnostics():
     assert decision == "defer"
 
 
+def test_config_diff_records_before_after_values():
+    diff = config_diff({"run_id": "base", "factors": ["momentum"]}, {"run_id": "variant", "factors": ["momentum", "volatility"]})
+    assert diff["run_id"] == {"before": "base", "after": "variant"}
+    assert diff["factors"]["after"] == ["momentum", "volatility"]
+
+
 def test_dry_iteration_writes_required_ledger_fields(tmp_path: Path):
     result = run_dry_iteration(
         tmp_path / "ledger.jsonl",
@@ -30,4 +36,6 @@ def test_dry_iteration_writes_required_ledger_fields(tmp_path: Path):
     rows = read_ledger(tmp_path / "ledger.jsonl")
     assert rows[0]["rationale"]
     assert rows[0]["config_hash"]
+    assert rows[0]["config_diff"]["factors"]["after"] == ["momentum", "volatility"]
+    assert rows[0]["config_snapshot"]["run_id"] == "base_agent_variant"
     assert rows[0]["decision"] == "adopt"

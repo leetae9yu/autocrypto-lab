@@ -46,6 +46,8 @@ def test_ledger_roundtrip(tmp_path: Path):
         run_id="r1",
         hypothesis="momentum survives costs",
         config_hash=stable_hash({"run_id": "r1"}),
+        config_diff={"run_id": {"before": "base", "after": "r1"}},
+        config_snapshot={"run_id": "r1"},
         rationale="fixture smoke",
         metrics={"net_return": 0.01},
         decision="continue",

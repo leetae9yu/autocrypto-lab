@@ -24,6 +24,18 @@ def propose_config_variant(config: dict[str, Any], hypothesis: str) -> dict[str,
     return variant
 
 
+def config_diff(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
+    """Record top-level config changes for autonomous provenance."""
+    keys = sorted(set(before) | set(after))
+    diff: dict[str, Any] = {}
+    for key in keys:
+        old = before.get(key)
+        new = after.get(key)
+        if old != new:
+            diff[key] = {"before": old, "after": new}
+    return diff
+
+
 def pareto_decision(candidate: dict[str, float], baseline: dict[str, float]) -> str:
     improves_return = candidate.get("net_return_after_funding", candidate.get("net_return", 0.0)) > baseline.get("net_return_after_funding", baseline.get("net_return", 0.0))
     improves_drawdown = candidate.get("max_drawdown", -1.0) >= baseline.get("max_drawdown", -1.0)
@@ -43,6 +55,8 @@ def run_dry_iteration(ledger_path: Path, config: dict[str, Any], baseline: dict[
         run_id=variant["run_id"],
         hypothesis=hypothesis,
         config_hash=stable_hash(variant),
+        config_diff=config_diff(config, variant),
+        config_snapshot=variant,
         rationale="config-only dry-run variant evaluated with Pareto + diagnostics policy",
         metrics=candidate,
         decision=decision,

@@ -12,6 +12,8 @@ def test_dashboard_renders_report_and_ledger(tmp_path: Path):
         run_id="r1",
         hypothesis="test hypothesis",
         config_hash="abc",
+        config_diff={"run_id": {"before": "base", "after": "r1"}},
+        config_snapshot={"run_id": "r1"},
         rationale="because",
         metrics={"net_return": 0.1},
         decision="continue",
