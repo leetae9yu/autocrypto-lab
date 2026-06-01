@@ -59,6 +59,30 @@ def run_long_short(rows: list[dict[str, Any]], factor: str, fee_bps: float = 5.0
     }
 
 
+def run_signal_backtest(rows: list[dict[str, Any]], *, score_field: str = "signal_score", fee_bps: float = 5.0, slippage_bps: float = 2.0, funding_cost: float = 0.0) -> dict[str, Any]:
+    if not rows or score_field not in rows[0]:
+        raise ValueError("model-signal backtest requires persisted signal_score rows")
+    metrics = run_long_short(rows, factor=score_field, fee_bps=fee_bps, slippage_bps=slippage_bps)
+    metrics["score_field"] = score_field
+    metrics["model_id"] = next((row.get("model_id") for row in rows if row.get("model_id")), "unknown")
+    metrics["funding_cost"] = funding_cost
+    metrics["net_return_after_funding"] = float(metrics["net_return"]) - funding_cost
+    metrics["ic"] = information_coefficient(rows, score_field)
+    metrics["quantile_returns"] = quantile_returns(rows, score_field)
+    metrics["stability"] = {
+        "periods": metrics["periods"],
+        "turnover_per_period": metrics["turnover"] / metrics["periods"] if metrics["periods"] else 0.0,
+        "has_multiple_periods": metrics["periods"] > 1,
+    }
+    metrics["robustness_flags"] = {
+        "cost_survives": metrics["net_return_after_funding"] > 0,
+        "has_quantiles": bool(metrics["quantile_returns"]),
+        "has_ic": metrics["ic"] != 0.0,
+        "model_signal_source": metrics["model_id"] != "unknown",
+    }
+    return metrics
+
+
 def information_coefficient(rows: list[dict[str, Any]], factor: str) -> float:
     usable = [row for row in rows if factor in row and "forward_return" in row and is_labeled(row)]
     if len(usable) < 2:

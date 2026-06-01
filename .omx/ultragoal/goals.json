@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T05:51:26.521Z",
-  "updatedAt": "2026-06-01T05:57:14.271169Z",
+  "updatedAt": "2026-06-01T05:57:59.253310Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -66,10 +66,12 @@
       "id": "G006-model-signal-backtest",
       "title": "Model-signal strategy backtests",
       "objective": "Route strategy/backtest diagnostics through persisted model_id/signal_score artifacts, including costs/funding proxy/IC/quantiles/turnover/volatility/MDD/stability.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:51:47.640988Z"
+      "updatedAt": "2026-06-01T05:57:59.253310Z",
+      "completedAt": "2026-06-01T05:57:59.253310Z",
+      "evidence": "G006: run_signal_backtest requires signal_score/model_id and reports cost/funding/IC/quantiles/stability; pytest 59 passed; compileall pass"
     },
     {
       "id": "G007-autonomous-loop",

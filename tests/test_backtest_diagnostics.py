@@ -2,7 +2,8 @@ from pathlib import Path
 
 from autocrypto_lab.data import load_ohlcv_csv
 from autocrypto_lab.factors import add_forward_returns, add_momentum
-from autocrypto_lab.backtest import quantile_returns, research_diagnostics, run_long_short
+from autocrypto_lab.backtest import quantile_returns, research_diagnostics, run_long_short, run_signal_backtest
+from autocrypto_lab.models import fit_weighted_score_model, score_model
 
 
 def fixture_rows():
@@ -28,3 +29,26 @@ def test_long_short_rebalances_by_timestamp_and_excludes_terminal_labels():
     assert metrics["turnover"] == 6.0
     assert len(metrics["long_symbol"].split(",")) == 3
     assert len(metrics["short_symbol"].split(",")) == 3
+
+
+def test_signal_backtest_requires_model_signal_scores():
+    rows = fixture_rows()
+    model = fit_weighted_score_model(rows, features=["momentum"], model_id="backtest_model")
+    scored = score_model(rows, model)
+    metrics = run_signal_backtest(scored, funding_cost=0.0001)
+
+    assert metrics["model_id"] == "backtest_model"
+    assert metrics["score_field"] == "signal_score"
+    assert "ic" in metrics
+    assert "quantile_returns" in metrics
+    assert "stability" in metrics
+    assert metrics["robustness_flags"]["model_signal_source"] is True
+
+
+def test_signal_backtest_rejects_factor_shortcut_rows():
+    try:
+        run_signal_backtest(fixture_rows())
+    except ValueError as exc:
+        assert "signal_score" in str(exc)
+    else:
+        raise AssertionError("signal backtest accepted rows without model signal output")
