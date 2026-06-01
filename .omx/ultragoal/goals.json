@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:46:28.823Z",
+  "updatedAt": "2026-06-01T04:47:02.481Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -88,10 +88,12 @@
       "id": "G008-backtest-diagnostics",
       "title": "Backtest diagnostics and cost metrics",
       "objective": "Add IC, quantile returns, long/short, volatility, MDD, turnover, fees/slippage/funding proxies.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:47:02.481Z",
+      "completedAt": "2026-06-01T04:47:02.481Z",
+      "evidence": "G008: IC, quantile returns, long/short, volatility/MDD/turnover/cost/funding diagnostics; pytest 26 passed"
     },
     {
       "id": "G009-etf-event-registry",

@@ -52,3 +52,33 @@ def information_coefficient(rows: list[dict[str, Any]], factor: str) -> float:
     if not f_var or not r_var:
         return 0.0
     return cov / (f_var ** 0.5 * r_var ** 0.5)
+
+
+def quantile_returns(rows: list[dict[str, Any]], factor: str, buckets: int = 3) -> dict[str, float]:
+    usable = sorted([row for row in rows if factor in row and "forward_return" in row], key=lambda row: row[factor])
+    if not usable:
+        return {}
+    out: dict[str, float] = {}
+    for idx, row in enumerate(usable):
+        bucket = min(buckets, int(idx * buckets / len(usable)) + 1)
+        out.setdefault(f"q{bucket}", 0.0)
+        out[f"q{bucket}"] += float(row["forward_return"])
+    counts = {key: 0 for key in out}
+    for idx, _ in enumerate(usable):
+        bucket = min(buckets, int(idx * buckets / len(usable)) + 1)
+        counts[f"q{bucket}"] += 1
+    return {key: value / counts[key] for key, value in out.items()}
+
+
+def research_diagnostics(rows: list[dict[str, Any]], factor: str, fee_bps: float = 5.0, slippage_bps: float = 2.0, funding_cost: float = 0.0) -> dict[str, Any]:
+    ls = run_long_short(rows, factor=factor, fee_bps=fee_bps, slippage_bps=slippage_bps)
+    ls["funding_cost"] = funding_cost
+    ls["net_return_after_funding"] = float(ls["net_return"]) - funding_cost
+    ls["ic"] = information_coefficient(rows, factor)
+    ls["quantile_returns"] = quantile_returns(rows, factor)
+    ls["robustness_flags"] = {
+        "cost_survives": ls["net_return_after_funding"] > 0,
+        "has_quantiles": bool(ls["quantile_returns"]),
+        "has_ic": ls["ic"] != 0.0,
+    }
+    return ls
