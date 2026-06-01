@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from autocrypto_lab.autonomous import config_diff, evaluate_candidate_configs, generate_candidate_configs, pareto_decision, propose_config_variant, run_autonomous_config_loop, run_dry_iteration
+from autocrypto_lab.autonomous import config_diff, evaluate_candidate_configs, generate_candidate_configs, pareto_decision, propose_config_variant, run_autonomous_config_loop, run_dry_iteration, run_iterative_agent_loop
 from autocrypto_lab.config import ALLOWED_CONFIG_KEYS, CPU_FRIENDLY_MODELS, load_config
 from autocrypto_lab.ledger import read_ledger
 from test_public_binance_pipeline import FakeBinanceAdapter, ts
@@ -106,6 +106,36 @@ def test_evaluate_candidate_configs_runs_real_walk_forward_pipeline(tmp_path: Pa
     assert ledger_rows[0]["manifest_path"].endswith("manifest.json")
     assert ledger_rows[0]["dashboard_path"].endswith("dashboard.html")
     assert ledger_rows[0]["pareto_rank"] in {1, 2}
+
+
+def test_run_iterative_agent_loop_promotes_feedback_into_next_config(tmp_path: Path):
+    summary = run_iterative_agent_loop(
+        tmp_path,
+        {
+            "run_id": "agent_iter",
+            "symbols": ["BTC", "ETH"],
+            "interval": "1h",
+            "factors": ["momentum", "derivatives_pressure"],
+        },
+        start=ts(0),
+        end=ts(3),
+        adapter=FakeBinanceAdapter(),
+        iterations=2,
+        max_candidates=2,
+        train_periods=2,
+        test_periods=1,
+    )
+
+    assert summary["iterations_completed"] == 2
+    assert Path(summary["summary_path"]).exists()
+    assert summary["iteration_summaries"][0]["promoted_candidate_id"]
+    assert summary["iteration_summaries"][1]["base_run_id"] == "agent_iter_iteration_002_base"
+    ledger_rows = read_ledger(Path(summary["ledger_path"]))
+    assert len(ledger_rows) == 4
+    assert {row["parent_run_id"] for row in ledger_rows} == {"agent_iter", "agent_iter_iteration_002_base"}
+    iteration_1 = Path(summary["iteration_summaries"][0]["summary_path"])
+    first_summary = __import__("json").loads(iteration_1.read_text())
+    assert first_summary["next_base_config"]["metadata"]["promoted_from_candidate_id"] == first_summary["promoted_candidate_id"]
 
 
 def test_dry_iteration_writes_required_ledger_fields(tmp_path: Path):

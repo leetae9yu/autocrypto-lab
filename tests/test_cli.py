@@ -32,13 +32,21 @@ def test_cli_run_agent_loop_uses_public_autonomous_evaluator(tmp_path, capsys, m
         calls["base_config"] = base_config
         calls["kwargs"] = kwargs
         return {
-            "summary_path": str(tmp_path / "candidate_evaluations.json"),
+            "summary_path": str(tmp_path / "agent_loop_summary.json"),
             "ledger_path": str(tmp_path / "agent_ledger.jsonl"),
-            "best_candidate_id": "candidate_001_weighted_score_baseline",
-            "candidate_count": 1,
+            "iterations_completed": 2,
+            "iteration_summaries": [
+                {
+                    "iteration": 1,
+                    "best_candidate_id": "candidate_001_weighted_score_baseline",
+                    "promoted_candidate_id": "candidate_001_weighted_score_baseline",
+                    "promoted_decision": "continue",
+                    "candidate_count": 1,
+                }
+            ],
         }
 
-    monkeypatch.setattr(cli, "evaluate_candidate_configs", fake_evaluator)
+    monkeypatch.setattr(cli, "run_iterative_agent_loop", fake_evaluator)
 
     assert main(
         [
@@ -55,12 +63,16 @@ def test_cli_run_agent_loop_uses_public_autonomous_evaluator(tmp_path, capsys, m
             "48",
             "--max-candidates",
             "1",
+            "--iterations",
+            "2",
         ]
     ) == 0
 
     out = capsys.readouterr().out
-    assert "best_candidate_id: candidate_001_weighted_score_baseline" in out
+    assert "iterations_completed: 2" in out
+    assert "iteration: 1 best=candidate_001_weighted_score_baseline promoted=candidate_001_weighted_score_baseline" in out
     assert calls["base_config"]["run_id"] == "cli_agent"
     assert calls["base_config"]["symbols"] == ["BTC", "ETH"]
     assert calls["base_config"]["factors"] == ["momentum", "derivatives_pressure"]
     assert calls["kwargs"]["max_candidates"] == 1
+    assert calls["kwargs"]["iterations"] == 2

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from autocrypto_lab import __version__
-from autocrypto_lab.autonomous import evaluate_candidate_configs
+from autocrypto_lab.autonomous import run_iterative_agent_loop
 from autocrypto_lab.pipeline import parse_utc, run_fixture_pipeline, run_public_binance_pipeline, run_public_fixture_pipeline
 
 
@@ -54,6 +54,8 @@ def build_parser() -> argparse.ArgumentParser:
     agent_loop.add_argument("--end", help="UTC ISO end. Defaults to now.")
     agent_loop.add_argument("--lookback-hours", type=int, default=72, help="Used when --start is omitted.")
     agent_loop.add_argument("--max-candidates", type=int, default=3, help="Maximum generated candidate configs to evaluate.")
+    agent_loop.add_argument("--iterations", type=int, default=1, help="Feedback-loop iterations: evaluate candidates, promote a config, then evaluate again.")
+    agent_loop.add_argument("--promotion-policy", choices=["pareto_best", "adopt_only"], default="pareto_best", help="How to choose the next iteration's base config.")
     agent_loop.add_argument("--train-periods", type=int, default=24, help="Default walk-forward train window length.")
     agent_loop.add_argument("--test-periods", type=int, default=6, help="Default out-of-sample test window length.")
     agent_loop.add_argument("--step-periods", type=int, help="Default walk-forward step length. Defaults to test-periods.")
@@ -112,7 +114,7 @@ def main(argv: list[str] | None = None) -> int:
         start = parse_utc(args.start) if args.start else end - timedelta(hours=args.lookback_hours)
         symbols = [symbol.strip().upper() for symbol in args.symbols.split(",") if symbol.strip()]
         factors = [factor.strip() for factor in args.factors.split(",") if factor.strip()]
-        summary = evaluate_candidate_configs(
+        summary = run_iterative_agent_loop(
             Path(args.output_dir),
             {
                 "run_id": args.run_id,
@@ -122,15 +124,25 @@ def main(argv: list[str] | None = None) -> int:
             },
             start=start,
             end=end,
+            iterations=args.iterations,
             max_candidates=args.max_candidates,
             train_periods=args.train_periods,
             test_periods=args.test_periods,
             step_periods=args.step_periods,
+            promotion_policy=args.promotion_policy,
         )
         print(f"summary: {summary['summary_path']}")
         print(f"ledger: {summary['ledger_path']}")
-        print(f"best_candidate_id: {summary['best_candidate_id']}")
-        print(f"candidate_count: {summary['candidate_count']}")
+        print(f"iterations_completed: {summary['iterations_completed']}")
+        for item in summary["iteration_summaries"]:
+            print(
+                "iteration:"
+                f" {item['iteration']}"
+                f" best={item['best_candidate_id']}"
+                f" promoted={item['promoted_candidate_id']}"
+                f" decision={item['promoted_decision']}"
+                f" candidates={item['candidate_count']}"
+            )
         return 0
     parser.print_help()
     return 0

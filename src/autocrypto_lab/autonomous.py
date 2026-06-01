@@ -246,6 +246,115 @@ def evaluate_candidate_configs(
     return summary
 
 
+def _promoted_candidate(summary: dict[str, Any], promotion_policy: str) -> dict[str, Any] | None:
+    evaluations = list(summary.get("evaluations", []))
+    if not evaluations:
+        return None
+    ranked = sorted(evaluations, key=lambda row: int(row.get("pareto_rank", 999)))
+    if promotion_policy == "adopt_only":
+        return next((row for row in ranked if row.get("decision") == "adopt"), None)
+    if promotion_policy == "pareto_best":
+        return ranked[0]
+    raise ValueError(f"unknown promotion_policy: {promotion_policy}")
+
+
+def _next_base_config(original_run_id: str, iteration: int, selected: dict[str, Any]) -> dict[str, Any]:
+    next_config = copy.deepcopy(selected["config"])
+    next_config["run_id"] = f"{original_run_id}_iteration_{iteration + 1:03d}_base"
+    metadata = dict(next_config.get("metadata", {}))
+    metadata.update(
+        {
+            "promoted_from_candidate_id": selected["candidate_id"],
+            "promoted_from_run_id": selected["run_id"],
+            "promoted_from_iteration": iteration,
+            "promotion_decision": selected.get("decision", ""),
+            "promotion_pareto_rank": selected.get("pareto_rank", 0),
+            "promotion_rationale": selected.get("rationale", ""),
+        }
+    )
+    next_config["metadata"] = metadata
+    load_config(next_config)
+    return next_config
+
+
+def run_iterative_agent_loop(
+    output_dir: Path,
+    base_config: dict[str, Any],
+    *,
+    start: datetime,
+    end: datetime,
+    adapter: Any | None = None,
+    iterations: int = 1,
+    max_candidates: int = 3,
+    train_periods: int = 24,
+    test_periods: int = 6,
+    step_periods: int | None = None,
+    promotion_policy: str = "pareto_best",
+) -> dict[str, Any]:
+    """Run the real feedback loop: evaluate, promote config, then evaluate again."""
+    if iterations < 1:
+        raise ValueError("iterations must be positive")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    original_run_id = str(base_config.get("run_id", "run"))
+    current_config = copy.deepcopy(base_config)
+    ledger_path = output_dir / "agent_ledger.jsonl"
+    iteration_summaries: list[dict[str, Any]] = []
+    for iteration in range(1, iterations + 1):
+        iteration_dir = output_dir / f"iteration_{iteration:03d}"
+        summary = evaluate_candidate_configs(
+            iteration_dir,
+            current_config,
+            start=start,
+            end=end,
+            adapter=adapter,
+            max_candidates=max_candidates,
+            train_periods=train_periods,
+            test_periods=test_periods,
+            step_periods=step_periods,
+            ledger_path=ledger_path,
+        )
+        selected = _promoted_candidate(summary, promotion_policy)
+        summary["iteration"] = iteration
+        summary["base_config_hash"] = stable_hash(current_config)
+        summary["promotion_policy"] = promotion_policy
+        summary["promoted_candidate_id"] = selected["candidate_id"] if selected else ""
+        summary["promoted_decision"] = selected.get("decision", "") if selected else ""
+        summary["promoted_pareto_rank"] = selected.get("pareto_rank", 0) if selected else 0
+        if selected and iteration < iterations:
+            current_config = _next_base_config(original_run_id, iteration, selected)
+            summary["next_base_config"] = current_config
+        Path(summary["summary_path"]).write_text(json.dumps(summary, indent=2, sort_keys=True, default=str), encoding="utf-8")
+        iteration_summaries.append(
+            {
+                "iteration": iteration,
+                "summary_path": summary["summary_path"],
+                "base_run_id": summary["base_run_id"],
+                "best_candidate_id": summary["best_candidate_id"],
+                "promoted_candidate_id": summary["promoted_candidate_id"],
+                "promoted_decision": summary["promoted_decision"],
+                "candidate_count": summary["candidate_count"],
+            }
+        )
+        if selected is None:
+            break
+    aggregate = {
+        "base_run_id": original_run_id,
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "iterations_requested": iterations,
+        "iterations_completed": len(iteration_summaries),
+        "max_candidates": max_candidates,
+        "promotion_policy": promotion_policy,
+        "ledger_path": str(ledger_path),
+        "iteration_summaries": iteration_summaries,
+        "final_base_config": current_config,
+    }
+    summary_path = output_dir / "agent_loop_summary.json"
+    aggregate["summary_path"] = str(summary_path)
+    summary_path.write_text(json.dumps(aggregate, indent=2, sort_keys=True, default=str), encoding="utf-8")
+    return aggregate
+
+
 def propose_config_variant(config: dict[str, Any], hypothesis: str) -> dict[str, Any]:
     """Return a config-only mutation for a hypothesis; never edits runtime code."""
     variant = copy.deepcopy(config)

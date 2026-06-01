@@ -76,14 +76,29 @@ PYTHONPATH=src python3 -m autocrypto_lab.cli run-agent-loop \
   --lookback-hours 72 \
   --train-periods 24 \
   --test-periods 6 \
-  --max-candidates 3
+  --max-candidates 3 \
+  --iterations 3
 ```
 
 Expected autonomous artifacts:
 
-- `/tmp/autocrypto-agent-loop-smoke/candidate_evaluations.json`
+- `/tmp/autocrypto-agent-loop-smoke/agent_loop_summary.json`
 - `/tmp/autocrypto-agent-loop-smoke/agent_ledger.jsonl`
-- one isolated candidate directory per generated config, each with `manifest.json`, `metrics.json`, `report.md`, `dashboard.html`, model artifact, signal artifact, and feature table
+- one `iteration_###/candidate_evaluations.json` per feedback iteration
+- one isolated candidate directory per generated config inside each iteration, each with `manifest.json`, `metrics.json`, `report.md`, `dashboard.html`, model artifact, signal artifact, and feature table
+
+With `--iterations N`, the loop is a real feedback loop:
+
+1. generate bounded config candidates
+2. walk-forward each candidate
+3. rank diagnostics and ledger decisions
+4. promote the selected config by `--promotion-policy`
+5. use that promoted config as the next iteration's base config
+
+Promotion policies:
+
+- `pareto_best` — always promote the top Pareto-ranked candidate, even if the decision is `continue`
+- `adopt_only` — promote only candidates that pass the stricter `adopt` decision
 
 Supported model families are CPU-friendly score models only:
 
