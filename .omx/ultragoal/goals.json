@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:49:42.452Z",
+  "updatedAt": "2026-06-01T05:03:15.958Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -143,10 +143,12 @@
       "id": "G013-e2e-polish",
       "title": "E2E polish and portfolio narrative",
       "objective": "Document one-command run, final README narrative, full verification, cleanup/review gate, and push readiness.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T05:03:15.958Z",
+      "evidence": "G013: e2e portfolio narrative, final verification, ai-slop cleanup report, code-review APPROVE, architect CLEAR, Codex goal complete",
+      "completedAt": "2026-06-01T05:03:15.958Z"
     }
   ],
   "codexObjective": "Complete the durable ultragoal plan in .omx/ultragoal/goals.json, including all G001-G013 stories, under the approved RALPLAN constraints; use .omx/ultragoal/ledger.jsonl as the audit trail."
