@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from autocrypto_lab.autonomous import config_diff, pareto_decision, propose_config_variant, run_autonomous_config_loop, run_dry_iteration
+from autocrypto_lab.autonomous import config_diff, generate_candidate_configs, pareto_decision, propose_config_variant, run_autonomous_config_loop, run_dry_iteration
+from autocrypto_lab.config import ALLOWED_CONFIG_KEYS, CPU_FRIENDLY_MODELS, load_config
 from autocrypto_lab.ledger import read_ledger
 
 
@@ -22,6 +23,45 @@ def test_config_diff_records_before_after_values():
     diff = config_diff({"run_id": "base", "factors": ["momentum"]}, {"run_id": "variant", "factors": ["momentum", "volatility"]})
     assert diff["run_id"] == {"before": "base", "after": "variant"}
     assert diff["factors"]["after"] == ["momentum", "volatility"]
+
+
+def test_generate_candidate_configs_is_deterministic_and_budgeted():
+    base = {"run_id": "base", "symbols": ["BTC", "ETH"], "interval": "1h", "factors": ["momentum"]}
+
+    first = generate_candidate_configs(base, max_candidates=3)
+    second = generate_candidate_configs(base, max_candidates=3)
+
+    assert first == second
+    assert [candidate["candidate_id"] for candidate in first] == [
+        "candidate_001_weighted_score_baseline",
+        "candidate_002_equal_weight_robustness",
+        "candidate_003_sign_weight_directional",
+    ]
+    assert len(first) == 3
+
+
+def test_generate_candidate_configs_are_config_only_and_cpu_safe():
+    candidates = generate_candidate_configs({"run_id": "base", "interval": "1h", "factors": ["momentum"]}, max_candidates=8)
+
+    assert {candidate["config"]["model"] for candidate in candidates} <= set(CPU_FRIENDLY_MODELS)
+    assert any(candidate["config"]["model"] == "walk_forward_equal_weight_score" for candidate in candidates)
+    assert any("reversal" in candidate["config"]["factors"] for candidate in candidates if isinstance(candidate["config"].get("factors"), list))
+    for candidate in candidates:
+        config = candidate["config"]
+        assert set(config) <= set(ALLOWED_CONFIG_KEYS)
+        assert config["public_only"] is True
+        assert config["allow_private_read"] is False
+        assert config["allow_trading"] is False
+        load_config(config)
+
+
+def test_generate_candidate_configs_rejects_unknown_base_keys():
+    try:
+        generate_candidate_configs({"run_id": "base", "surprise": "nope"}, max_candidates=1)
+    except ValueError as exc:
+        assert "unknown config keys" in str(exc)
+    else:
+        raise AssertionError("unknown base config key was accepted")
 
 
 def test_dry_iteration_writes_required_ledger_fields(tmp_path: Path):

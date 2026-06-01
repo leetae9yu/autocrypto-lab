@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T07:25:19.290Z",
-  "updatedAt": "2026-06-01T07:30:32.594Z",
+  "updatedAt": "2026-06-01T07:31:57.873Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -66,17 +66,22 @@
       "id": "G003-config-only-candidate-generator",
       "title": "Config-only candidate generator",
       "objective": "Add a deterministic candidate generator for factor/model/window/hyperparameter templates with budget and config-only mutation guarantees.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T07:25:19.290Z",
-      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "updatedAt": "2026-06-01T07:31:57.873Z",
       "commitIntent": "Generate bounded config-only research candidates",
       "acceptanceCriteria": [
         "Candidate generation is deterministic for a fixed base config.",
         "Every candidate validates through ExperimentConfig and mutates only config fields.",
         "Candidate budget limits the returned list and includes model/factor/window variation."
       ],
-      "evidence": []
+      "evidence": [
+        "Added deterministic generate_candidate_configs with candidate ids, hypotheses, CPU model/factor/window templates, and max_candidates budget.",
+        "Every candidate is public_only, allow_private_read=false, allow_trading=false, uses only ALLOWED_CONFIG_KEYS, and validates through load_config.",
+        "Verification: python3 -m pytest tests/test_autonomous_loop.py -q (8 passed); python3 -m pytest -q (82 passed); python3 -m compileall -q src tests."
+      ],
+      "completedAt": "2026-06-01T07:31:57.873Z"
     },
     {
       "id": "G004-real-walk-forward-evaluator-loop",

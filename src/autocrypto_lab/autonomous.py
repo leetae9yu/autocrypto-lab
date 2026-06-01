@@ -6,8 +6,112 @@ import copy
 from pathlib import Path
 from typing import Any
 
+from autocrypto_lab.config import ALLOWED_CONFIG_KEYS, CPU_FRIENDLY_MODELS, load_config
 from autocrypto_lab.ledger import LedgerEntry, append_ledger
 from autocrypto_lab.manifest import stable_hash
+
+CONFIG_MUTATION_KEYS = set(ALLOWED_CONFIG_KEYS)
+
+
+def _factor_name(factor: Any) -> str:
+    if isinstance(factor, str):
+        return factor
+    if isinstance(factor, dict):
+        return str(factor.get("name", ""))
+    return ""
+
+
+def _with_candidate_defaults(base_config: dict[str, Any], candidate_id: str, hypothesis: str) -> dict[str, Any]:
+    candidate = copy.deepcopy(base_config)
+    candidate["run_id"] = f"{base_config.get('run_id', 'run')}_{candidate_id}"
+    candidate["public_only"] = True
+    candidate["allow_private_read"] = False
+    candidate["allow_trading"] = False
+    candidate.setdefault("metadata", {})["candidate_id"] = candidate_id
+    candidate["metadata"]["hypothesis"] = hypothesis
+    return candidate
+
+
+def generate_candidate_configs(base_config: dict[str, Any], max_candidates: int = 6) -> list[dict[str, Any]]:
+    """Generate deterministic, config-only CPU-friendly research candidates.
+
+    The generator mutates only experiment config fields, validates every candidate
+    through the public-only config contract, and never proposes source-code edits.
+    """
+    if max_candidates < 1:
+        return []
+    unknown_base_keys = sorted(set(base_config) - CONFIG_MUTATION_KEYS)
+    if unknown_base_keys:
+        raise ValueError(f"base_config has unknown config keys: {unknown_base_keys}")
+
+    base_factors = list(copy.deepcopy(base_config.get("factors", ["momentum"])))
+    base_factor_names = {_factor_name(factor) for factor in base_factors}
+    templates: list[tuple[str, str, dict[str, Any]]] = [
+        (
+            "weighted_score_baseline",
+            "Correlation-weighted walk-forward score tests whether existing factors still explain next-period returns.",
+            {"model": "walk_forward_weighted_score", "factors": base_factors},
+        ),
+        (
+            "equal_weight_robustness",
+            "Equal-weight score checks whether avoiding IC overfit improves robustness.",
+            {"model": "walk_forward_equal_weight_score", "factors": base_factors},
+        ),
+        (
+            "sign_weight_directional",
+            "Sign-weight score keeps only directional IC information to reduce parameter sensitivity.",
+            {"model": "walk_forward_sign_weight_score", "factors": base_factors},
+        ),
+        (
+            "short_train_window",
+            "Shorter walk-forward train window tests faster regime adaptation with the same factor set.",
+            {"model": "walk_forward_weighted_score", "factors": base_factors, "model_params": {"train_periods": 24, "test_periods": 6}},
+        ),
+        (
+            "long_train_window",
+            "Longer walk-forward train window tests smoother parameter estimates across regimes.",
+            {"model": "walk_forward_weighted_score", "factors": base_factors, "model_params": {"train_periods": 72, "test_periods": 12}},
+        ),
+    ]
+    if "reversal" not in base_factor_names:
+        templates.append(
+            (
+                "add_reversal_factor",
+                "Add reversal to test whether short-horizon mean reversion improves the factor stack.",
+                {"model": "walk_forward_sign_weight_score", "factors": [*base_factors, "reversal"]},
+            )
+        )
+    if "volatility" not in base_factor_names:
+        templates.append(
+            (
+                "add_volatility_factor",
+                "Add volatility to test whether risk-state information improves drawdown diagnostics.",
+                {"model": "walk_forward_equal_weight_score", "factors": [*base_factors, "volatility"]},
+            )
+        )
+    templates.append(
+        (
+            "momentum_lookback_3",
+            "Use a shorter momentum lookback to test whether recent trend information dominates.",
+            {"model": "walk_forward_weighted_score", "factors": [{"name": "momentum", "params": {"lookback_periods": 3}}]},
+        )
+    )
+
+    candidates: list[dict[str, Any]] = []
+    for idx, (slug, hypothesis, overrides) in enumerate(templates, start=1):
+        if len(candidates) >= max_candidates:
+            break
+        candidate_id = f"candidate_{idx:03d}_{slug}"
+        config = _with_candidate_defaults(base_config, candidate_id, hypothesis)
+        config.update(copy.deepcopy(overrides))
+        if config["model"] not in CPU_FRIENDLY_MODELS:
+            raise ValueError(f"candidate {candidate_id} selected non-CPU model: {config['model']}")
+        unknown_keys = sorted(set(config) - CONFIG_MUTATION_KEYS)
+        if unknown_keys:
+            raise ValueError(f"candidate {candidate_id} has unknown config keys: {unknown_keys}")
+        load_config(config)
+        candidates.append({"candidate_id": candidate_id, "hypothesis": hypothesis, "config": config})
+    return candidates
 
 
 def propose_config_variant(config: dict[str, Any], hypothesis: str) -> dict[str, Any]:
