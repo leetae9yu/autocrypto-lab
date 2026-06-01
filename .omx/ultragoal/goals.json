@@ -1,114 +1,135 @@
 {
   "version": 1,
-  "createdAt": "2026-06-01T05:51:26.521Z",
-  "updatedAt": "2026-06-01T06:15:59.886739Z",
+  "createdAt": "2026-06-01T07:25:19.290Z",
+  "updatedAt": "2026-06-01T07:27:11.234Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
   "codexGoalMode": "aggregate",
+  "codexObjective": "Implement the CPU-friendly autonomous research loop plan in .omx/plans/ralplan-cpu-friendly-autonomous-research-loop.md using .omx/ultragoal/goals.json as the durable story ledger; commit each story and preserve public-only/no-trade safety.",
+  "sourcePlanPath": ".omx/plans/ralplan-cpu-friendly-autonomous-research-loop.md",
+  "constraints": [
+    "public-free-data-first",
+    "no private/signed/order routes",
+    "no trading or sandbox orders",
+    "minimum 1h cadence",
+    "CPU-friendly only: no LSTM/Transformer/GPU/deep-learning dependency",
+    "config-only autonomy for research changes",
+    "commit per story"
+  ],
   "goals": [
     {
-      "id": "G001-public-only-boundary",
-      "title": "Public-only phase safety boundary",
-      "objective": "Extend config/safety tests so the next phase rejects API keys, secrets, private reads, signed/private/order/leverage/margin routes, exchange POST/DELETE actions, and preserves >=1h cadence/no-trade scope.",
-      "status": "complete",
+      "id": "G001-cpu-model-registry-contract",
+      "title": "CPU-friendly model registry contract",
+      "objective": "Add config schema and model registry contract for CPU-friendly model families. Include unknown/GPU/deep-learning model rejection tests.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:52:58.432340Z",
-      "completedAt": "2026-06-01T05:52:58.432340Z",
-      "evidence": "G001: public_only config/policy rejects private reads, API credentials, signed/private/order routes, exchange POST/DELETE; pytest 46 passed; compileall pass"
+      "createdAt": "2026-06-01T07:25:19.290Z",
+      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "commitIntent": "Constrain autonomous models to CPU-friendly registry",
+      "acceptanceCriteria": [
+        "Config accepts only approved CPU-friendly model families plus legacy baseline where needed.",
+        "Config rejects LSTM/Transformer/GPU/unknown model names.",
+        "Model params remain public/config-only and forbidden private keys are rejected."
+      ],
+      "evidence": []
     },
     {
-      "id": "G002-public-futures-adapters",
-      "title": "Binance public futures adapter contracts",
-      "objective": "Implement API-key-free public futures request planning/fake-client adapters for klines, funding, open interest, basis, public archive metadata, and BTC/ETH/SOL/XRP -> *USDT mapping.",
-      "status": "complete",
+      "id": "G002-cpu-walk-forward-score-models",
+      "title": "CPU walk-forward score model families",
+      "objective": "Implement equal-weight and sign-weight walk-forward score models under the existing artifact contract. Tests prove out-of-sample scoring and artifact metadata.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:54:09.836185Z",
-      "completedAt": "2026-06-01T05:54:09.836185Z",
-      "evidence": "G002: Binance public futures adapter request planning/fake-client tests for klines/funding/OI/basis/archive and symbol mapping; pytest 51 passed; compileall pass"
+      "createdAt": "2026-06-01T07:25:19.290Z",
+      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "commitIntent": "Add CPU-friendly walk-forward score models",
+      "acceptanceCriteria": [
+        "Weighted/equal/sign model families share the walk-forward no-leakage contract.",
+        "Artifacts expose the selected model_type and fold metadata.",
+        "Tests cover model family behavior and pipeline propagation."
+      ],
+      "evidence": []
     },
     {
-      "id": "G003-artifact-storage",
-      "title": "Raw/normalized artifact storage",
-      "objective": "Add endpoint-specific raw response artifacts, normalized public futures tables, schema/version/hash/retention/checksum metadata, and deterministic storage tests.",
-      "status": "complete",
+      "id": "G003-config-only-candidate-generator",
+      "title": "Config-only candidate generator",
+      "objective": "Add a deterministic candidate generator for factor/model/window/hyperparameter templates with budget and config-only mutation guarantees.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:55:16.695723Z",
-      "completedAt": "2026-06-01T05:55:16.695723Z",
-      "evidence": "G003: endpoint-specific raw/normalized artifact manifests with schema/version/hash/retention/checksum/raw-id lineage; pytest 53 passed; compileall pass"
+      "createdAt": "2026-06-01T07:25:19.290Z",
+      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "commitIntent": "Generate bounded config-only research candidates",
+      "acceptanceCriteria": [
+        "Candidate generation is deterministic for a fixed base config.",
+        "Every candidate validates through ExperimentConfig and mutates only config fields.",
+        "Candidate budget limits the returned list and includes model/factor/window variation."
+      ],
+      "evidence": []
     },
     {
-      "id": "G004-pit-feature-table",
-      "title": "PIT public futures feature table",
-      "objective": "Build known-at aligned feature tables from klines/funding/open-interest/basis with leakage tests and label horizon handling.",
-      "status": "complete",
+      "id": "G004-real-walk-forward-evaluator-loop",
+      "title": "Real walk-forward candidate evaluator",
+      "objective": "Wire candidate configs into the reusable public Binance/fake-adapter walk-forward evaluator and isolate artifacts by candidate run_id.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:56:08.746543Z",
-      "completedAt": "2026-06-01T05:56:08.746543Z",
-      "evidence": "G004: known-at public futures feature table joins klines/funding/OI/basis without future leakage; pytest 55 passed; compileall pass"
+      "createdAt": "2026-06-01T07:25:19.290Z",
+      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "commitIntent": "Evaluate autonomous candidates with walk-forward backtests",
+      "acceptanceCriteria": [
+        "Each candidate runs through the public-data walk-forward evaluator with isolated output directories.",
+        "Fake adapter tests prove deterministic end-to-end evaluation without API keys.",
+        "No candidate evaluation uses in-sample-only shortcuts."
+      ],
+      "evidence": []
     },
     {
-      "id": "G005-factor-model-artifacts",
-      "title": "Real multi-factor model artifacts",
-      "objective": "Add dependency-light model artifact layer with model_id, feature list, weights/rules, train/eval windows, input hashes, signal_score output, metrics, and artifact hash.",
-      "status": "complete",
+      "id": "G005-autonomous-ledger-and-summary",
+      "title": "Autonomous ledger and feedback summary",
+      "objective": "Extend ledger/summary output to record candidate artifact lineage, metrics, decision, rationale, and Pareto ranking.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:57:14.271169Z",
-      "completedAt": "2026-06-01T05:57:14.271169Z",
-      "evidence": "G005: weighted-score multi-factor model artifact with model_id/features/weights/train-eval/input-hash/signal_score/artifact-hash persistence; pytest 57 passed; compileall pass"
+      "createdAt": "2026-06-01T07:25:19.290Z",
+      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "commitIntent": "Ledger autonomous candidate feedback decisions",
+      "acceptanceCriteria": [
+        "Ledger records hypothesis, config diff, artifact lineage, metrics, Pareto rank, decision, and rationale per candidate.",
+        "Summary identifies the best/deferred candidates without investment-advice claims.",
+        "Artifact lineage is reproducible from manifest/report/dashboard paths."
+      ],
+      "evidence": []
     },
     {
-      "id": "G006-model-signal-backtest",
-      "title": "Model-signal strategy backtests",
-      "objective": "Route strategy/backtest diagnostics through persisted model_id/signal_score artifacts, including costs/funding proxy/IC/quantiles/turnover/volatility/MDD/stability.",
-      "status": "complete",
+      "id": "G006-agent-loop-cli-docs",
+      "title": "Agent loop CLI and docs",
+      "objective": "Add a run-agent-loop CLI and README usage for the CPU-friendly autonomous loop.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:57:59.253310Z",
-      "completedAt": "2026-06-01T05:57:59.253310Z",
-      "evidence": "G006: run_signal_backtest requires signal_score/model_id and reports cost/funding/IC/quantiles/stability; pytest 59 passed; compileall pass"
+      "createdAt": "2026-06-01T07:25:19.290Z",
+      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "commitIntent": "Expose CPU-friendly autonomous research loop",
+      "acceptanceCriteria": [
+        "CLI can run the autonomous loop with public Binance data and no credentials.",
+        "README documents CPU-friendly autonomy, safety limits, and example commands.",
+        "CLI help/tests cover the new command surface."
+      ],
+      "evidence": []
     },
     {
-      "id": "G007-autonomous-loop",
-      "title": "Autonomous config-only experiment loop",
-      "objective": "Run repeated bounded config-only experiments that propose variants, execute model/backtests, rank Pareto diagnostics, and ledger full provenance including data/feature/model/signal artifact ids.",
-      "status": "complete",
+      "id": "G007-final-verification-gate",
+      "title": "Final safety and reproducibility gate",
+      "objective": "Run deterministic tests, a small real public Binance smoke where possible, no-trade safety scan, cleanup/slop scan, code review, and final push.",
+      "status": "pending",
       "attempt": 0,
-      "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:59:02.964276Z",
-      "completedAt": "2026-06-01T05:59:02.964276Z",
-      "evidence": "G007: repeated config-only autonomous loop records config diff/hash/snapshot plus raw/normalized/feature/model/signal artifact ids and decisions; pytest 60 passed; compileall pass"
-    },
-    {
-      "id": "G008-cli-docs-e2e",
-      "title": "CLI, docs, reports, and fixture e2e",
-      "objective": "Expose fixture/replay-first CLI vertical slice and documentation for public-data no-key scope, limitations, generated reports, and dashboard artifacts.",
-      "status": "complete",
-      "attempt": 0,
-      "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T06:00:19.510137Z",
-      "completedAt": "2026-06-01T06:00:19.510137Z",
-      "evidence": "G008: run-public-fixture CLI produces report/regime/dashboard/manifest/model/signals using public-only model-signal pipeline; pytest 62 passed; public smoke generated artifacts; compileall pass"
-    },
-    {
-      "id": "G009-final-quality-gate",
-      "title": "Final verification, cleanup, review, and push",
-      "objective": "Run full deterministic verification, no-trade/no-signed-route scan, ai-slop-cleaner report, code-review APPROVE/CLEAR, commit final checkpoint, and push origin main.",
-      "status": "complete",
-      "attempt": 0,
-      "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T06:15:59.886739Z",
-      "completedAt": "2026-06-01T06:15:59.886739Z",
-      "evidence": "G009: final quality gate passed; pytest 67 passed; public fixture and legacy sample CLI smoke generated artifacts; compileall pass; no-trade/no-signed-route scan pass; ai-slop-cleaner pass; code-review APPROVE; architect CLEAR; final quality gate recorded in docs/final-quality-gate.md and .omx/ultragoal/final-quality-gate.json"
+      "createdAt": "2026-06-01T07:25:19.290Z",
+      "updatedAt": "2026-06-01T07:27:11.234Z",
+      "commitIntent": "Verify autonomous research loop safety and reproducibility",
+      "acceptanceCriteria": [
+        "Full deterministic pytest suite passes.",
+        "A small public Binance smoke run is attempted and evidence is recorded.",
+        "Safety scan finds no private/signed/order routes or trading code.",
+        "Final quality gate evidence is written to .omx/ultragoal/final-quality-gate.json."
+      ],
+      "evidence": []
     }
-  ],
-  "codexObjective": "Complete the durable ultragoal plan in .omx/ultragoal/goals.json for the public futures factor autonomy phase; use .omx/ultragoal/ledger.jsonl as the audit trail.",
-  "codexObjectiveAliases": [
-    "Complete the durable ultragoal plan in .omx/ultragoal/goals.json, including later accepted/appended stories, under the original brief constraints; use .omx/ultragoal/ledger.jsonl as the audit trail."
   ]
 }
