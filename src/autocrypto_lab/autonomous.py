@@ -125,6 +125,26 @@ def generate_candidate_configs(base_config: dict[str, Any], max_candidates: int 
                 "Random forest with daily rebalance tests nonlinear interactions under a low-turnover cost budget.",
                 {"model": "walk_forward_random_forest", "horizon_periods": 24, "factors": base_factors, "model_params": {"train_periods": 336, "test_periods": 24, "backtest_rebalance_periods": 24, "n_estimators": 100, "max_depth": 4, "min_samples_leaf": 5, "random_state": 42, "n_jobs": 1}},
             ),
+            (
+                "ridge_rebalance_8h_horizon",
+                "Ridge regression tests a regularized linear factor mix under the previously promising 8-hour turnover budget.",
+                {"model": "walk_forward_ridge", "horizon_periods": 8, "factors": base_factors, "model_params": {"train_periods": 168, "test_periods": 24, "backtest_rebalance_periods": 8, "alpha": 1.0}},
+            ),
+            (
+                "elastic_net_rebalance_8h_horizon",
+                "Elastic net tests sparse regularized factor selection while keeping the 8-hour turnover budget.",
+                {"model": "walk_forward_elastic_net", "horizon_periods": 8, "factors": base_factors, "model_params": {"train_periods": 168, "test_periods": 24, "backtest_rebalance_periods": 8, "alpha": 0.001, "l1_ratio": 0.2, "max_iter": 5000, "random_state": 42}},
+            ),
+            (
+                "extra_trees_rebalance_8h_horizon",
+                "Extra trees tests randomized nonlinear factor interactions with shallow trees and 8-hour rebalancing.",
+                {"model": "walk_forward_extra_trees", "horizon_periods": 8, "factors": base_factors, "model_params": {"train_periods": 168, "test_periods": 24, "backtest_rebalance_periods": 8, "n_estimators": 100, "max_depth": 4, "min_samples_leaf": 5, "random_state": 42, "n_jobs": 1}},
+            ),
+            (
+                "gradient_boosting_rebalance_8h_horizon",
+                "Gradient boosting tests a small boosted-tree ensemble for nonlinear factor interactions under the 8-hour turnover budget.",
+                {"model": "walk_forward_gradient_boosting", "horizon_periods": 8, "factors": base_factors, "model_params": {"train_periods": 168, "test_periods": 24, "backtest_rebalance_periods": 8, "n_estimators": 80, "learning_rate": 0.05, "max_depth": 2, "min_samples_leaf": 5, "random_state": 42}},
+            ),
         ]
     )
 

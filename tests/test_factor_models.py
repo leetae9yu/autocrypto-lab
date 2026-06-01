@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from autocrypto_lab.factors import build_public_futures_feature_table
-from autocrypto_lab.models import fit_walk_forward_random_forest_model, fit_walk_forward_weighted_score_model, fit_weighted_score_model, score_model, write_model_artifacts
+from autocrypto_lab.models import fit_walk_forward_random_forest_model, fit_walk_forward_sklearn_regressor_model, fit_walk_forward_weighted_score_model, fit_weighted_score_model, score_model, write_model_artifacts
 
 
 def ts(hour: int):
@@ -146,3 +146,33 @@ def test_walk_forward_random_forest_scores_oos_and_records_importance():
     assert scored
     assert all(row["model_id"] == "wf_rf" for row in scored)
     assert all(row["test_start"] > row["train_end"] for row in scored)
+
+def test_walk_forward_sklearn_regressors_score_oos_for_diverse_cpu_models():
+    rows = feature_rows()
+    families = [
+        ("walk_forward_ridge", {"alpha": 1.0}),
+        ("walk_forward_elastic_net", {"alpha": 0.001, "l1_ratio": 0.2, "max_iter": 5000, "random_state": 7}),
+        ("walk_forward_extra_trees", {"n_estimators": 5, "max_depth": 2, "min_samples_leaf": 1, "random_state": 7, "n_jobs": 1}),
+        ("walk_forward_gradient_boosting", {"n_estimators": 5, "learning_rate": 0.05, "max_depth": 2, "min_samples_leaf": 1, "random_state": 7}),
+    ]
+
+    for family, params in families:
+        model, scored = fit_walk_forward_sklearn_regressor_model(
+            rows,
+            features=["momentum", "derivatives_pressure"],
+            model_id=f"wf_{family}",
+            model_family=family,
+            train_periods=2,
+            test_periods=1,
+            model_params=params,
+        )
+
+        assert model.model_type == family
+        assert model.metrics["walk_forward"] is True
+        assert model.metrics["estimator"].startswith("sklearn.")
+        assert model.metrics["folds"][0]["weights"]
+        assert set(model.weights) == {"momentum", "derivatives_pressure"}
+        assert scored
+        assert all(row["model_id"] == f"wf_{family}" for row in scored)
+        assert all(row["test_start"] > row["train_end"] for row in scored)
+

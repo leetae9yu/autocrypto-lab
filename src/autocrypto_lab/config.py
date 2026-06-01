@@ -14,6 +14,10 @@ CPU_FRIENDLY_MODELS = (
     "walk_forward_equal_weight_score",
     "walk_forward_sign_weight_score",
     "walk_forward_random_forest",
+    "walk_forward_ridge",
+    "walk_forward_elastic_net",
+    "walk_forward_extra_trees",
+    "walk_forward_gradient_boosting",
 )
 LEGACY_MODELS = ("baseline_mean",)
 ALLOWED_MODELS = (*LEGACY_MODELS, *CPU_FRIENDLY_MODELS)

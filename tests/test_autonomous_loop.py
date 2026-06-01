@@ -205,3 +205,17 @@ def test_generate_candidate_configs_includes_low_turnover_rebalance_templates():
     for candidate in low_turnover:
         load_config(candidate["config"])
 
+def test_generate_candidate_configs_includes_diverse_cpu_friendly_models():
+    candidates = generate_candidate_configs(
+        {"run_id": "base", "symbols": ["BTC", "ETH"], "interval": "1h", "factors": ["momentum", "volatility"]},
+        max_candidates=15,
+    )
+    models = {candidate["config"]["model"] for candidate in candidates}
+
+    assert "walk_forward_ridge" in models
+    assert "walk_forward_elastic_net" in models
+    assert "walk_forward_extra_trees" in models
+    assert "walk_forward_gradient_boosting" in models
+    for candidate in candidates:
+        load_config(candidate["config"])
+
