@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T04:40:09.110268Z",
-  "updatedAt": "2026-06-01T04:48:24.884Z",
+  "updatedAt": "2026-06-01T04:49:10.046Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -121,10 +121,12 @@
       "id": "G011-autonomous-loop",
       "title": "Autonomous config-only research loop",
       "objective": "Implement dry-run loop that mutates configs only and ledgers hypotheses, config diffs, diagnostics, and Pareto decisions.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T04:40:09.110268Z",
-      "updatedAt": "2026-06-01T04:40:09.110268Z"
+      "updatedAt": "2026-06-01T04:49:10.046Z",
+      "completedAt": "2026-06-01T04:49:10.046Z",
+      "evidence": "G011: config-only variant proposal, Pareto+diagnostics decision, mandatory JSONL ledger rationale; pytest 33 passed"
     },
     {
       "id": "G012-dashboard-demo",
