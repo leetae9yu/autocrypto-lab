@@ -12,6 +12,8 @@ def test_fixture_pipeline_outputs_report_and_manifest(tmp_path: Path):
     )
     assert outputs["report"].exists()
     assert outputs["manifest"].exists()
+    assert outputs["regime_report"].exists()
+    assert outputs["dashboard"].exists()
     report = outputs["report"].read_text()
     assert DISCLAIMER in report
     assert "net_return" in report
@@ -24,3 +26,5 @@ def test_cli_run_sample(tmp_path: Path, capsys):
     out = capsys.readouterr().out
     assert "report:" in out
     assert (tmp_path / "report.md").exists()
+    assert (tmp_path / "regime_report.md").exists()
+    assert (tmp_path / "dashboard.html").exists()
