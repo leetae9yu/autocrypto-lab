@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAt": "2026-06-01T05:51:26.521Z",
-  "updatedAt": "2026-06-01T05:56:08.746543Z",
+  "updatedAt": "2026-06-01T05:57:14.271169Z",
   "briefPath": ".omx/ultragoal/brief.md",
   "goalsPath": ".omx/ultragoal/goals.json",
   "ledgerPath": ".omx/ultragoal/ledger.jsonl",
@@ -55,10 +55,12 @@
       "id": "G005-factor-model-artifacts",
       "title": "Real multi-factor model artifacts",
       "objective": "Add dependency-light model artifact layer with model_id, feature list, weights/rules, train/eval windows, input hashes, signal_score output, metrics, and artifact hash.",
-      "status": "pending",
+      "status": "complete",
       "attempt": 0,
       "createdAt": "2026-06-01T05:51:47.640988Z",
-      "updatedAt": "2026-06-01T05:51:47.640988Z"
+      "updatedAt": "2026-06-01T05:57:14.271169Z",
+      "completedAt": "2026-06-01T05:57:14.271169Z",
+      "evidence": "G005: weighted-score multi-factor model artifact with model_id/features/weights/train-eval/input-hash/signal_score/artifact-hash persistence; pytest 57 passed; compileall pass"
     },
     {
       "id": "G006-model-signal-backtest",
