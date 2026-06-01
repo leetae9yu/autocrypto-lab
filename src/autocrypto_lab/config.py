@@ -20,7 +20,7 @@ class ExperimentConfig:
     symbols: tuple[str, ...] = CANONICAL_SYMBOLS
     interval: str = "1h"
     horizon_periods: int = 1
-    factors: tuple[str, ...] = ("momentum",)
+    factors: tuple[Any, ...] = ("momentum",)
     model: str = "baseline_mean"
     fee_bps: float = 5.0
     slippage_bps: float = 2.0
@@ -54,6 +54,27 @@ class ExperimentConfig:
             allow_trading=self.allow_trading,
             minimum_cadence_minutes=self.cadence_minutes,
         ).validate()
+
+    def factor_specs(self) -> list[dict[str, Any]]:
+        """Normalize config factor declarations into safe declarative DSL specs."""
+        specs: list[dict[str, Any]] = []
+        for factor in self.factors:
+            if isinstance(factor, str):
+                specs.append({"name": factor})
+                continue
+            if isinstance(factor, Mapping):
+                name = factor.get("name")
+                if not isinstance(name, str) or not name:
+                    raise ConfigError("factor mapping requires a non-empty name")
+                params = factor.get("params", {})
+                if not isinstance(params, Mapping):
+                    raise ConfigError(f"factor {name} params must be a mapping")
+                specs.append({"name": name, "params": dict(params)})
+                continue
+            raise ConfigError(f"unsupported factor declaration: {factor!r}")
+        if not specs:
+            raise ConfigError("at least one factor is required")
+        return specs
 
 
 def load_config(raw: Mapping[str, Any]) -> ExperimentConfig:

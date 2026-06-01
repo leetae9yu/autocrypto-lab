@@ -22,5 +22,8 @@ def test_regime_report_contains_sources_metrics_and_limitations(tmp_path: Path):
     assert "ETF Regime Diagnostics" in text
     assert "sec.gov" in text
     assert "Quantile returns" in text
+    assert "Volatility" in text
+    assert "Long/short symbols" in text
+    assert "Funding cost" in text
     assert "not investment advice" in text.lower()
     assert "samples are short" in text
