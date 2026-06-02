@@ -5,7 +5,7 @@ import pytest
 
 from autocrypto_lab.adapters import BinancePublicFuturesAdapter, FixtureMarketDataAdapter, MarketDataRequest, PublicFuturesRequest, futures_symbol
 from autocrypto_lab.config import ConfigError
-from autocrypto_lab.data import load_ohlcv_csv
+from autocrypto_lab.data import load_feature_table_csv, load_ohlcv_csv
 from autocrypto_lab.safety import SafetyViolation
 from autocrypto_lab.storage import write_public_normalized_artifact, write_public_raw_artifact, write_snapshot
 
@@ -148,3 +148,21 @@ def test_public_normalized_artifact_links_raw_ids(tmp_path: Path):
     assert normalized.metadata["raw_artifact_ids"] == [raw.artifact_id]
     assert normalized.content_hash
     assert Path(normalized.path).read_text().splitlines()[0] == "timestamp,symbol,funding_rate"
+
+
+def test_load_feature_table_csv_parses_timestamp_columns_for_pit_replay(tmp_path: Path):
+    path = tmp_path / "feature_table.csv"
+    path.write_text(
+        "timestamp,known_at,label_timestamp,label_available,symbol,momentum,forward_return,signal_score\n"
+        "2026-05-01T00:00:00Z,2026-05-01 00:00:00+00:00,2026-05-01 08:00:00+00:00,True,BTCUSDT,0.1,0.02,0.03\n",
+        encoding="utf-8",
+    )
+
+    rows = load_feature_table_csv(path)
+
+    assert rows[0]["timestamp"].isoformat() == "2026-05-01T00:00:00+00:00"
+    assert rows[0]["known_at"].isoformat() == "2026-05-01T00:00:00+00:00"
+    assert rows[0]["label_timestamp"] > rows[0]["timestamp"]
+    assert rows[0]["label_available"] is True
+    assert rows[0]["momentum"] == 0.1
+    assert rows[0]["signal_score"] == 0.03
