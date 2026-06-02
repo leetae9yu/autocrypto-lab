@@ -438,12 +438,20 @@ def config_diff(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]
     return diff
 
 
+def _has_minimum_research_periods(metrics: dict[str, Any], minimum_periods: int = 12) -> bool:
+    flags = metrics.get("robustness_flags", {})
+    if isinstance(flags, Mapping) and "has_minimum_research_periods" in flags:
+        return bool(flags["has_minimum_research_periods"])
+    return int(metrics.get("periods", 0)) >= minimum_periods
+
+
 def pareto_decision(candidate: dict[str, float], baseline: dict[str, float]) -> str:
     improves_return = candidate.get("net_return_after_funding", candidate.get("net_return", 0.0)) > baseline.get("net_return_after_funding", baseline.get("net_return", 0.0))
     improves_drawdown = candidate.get("max_drawdown", -1.0) >= baseline.get("max_drawdown", -1.0)
     turnover_ok = candidate.get("turnover", 999.0) <= max(2.0, baseline.get("turnover", 2.0) * 1.5)
     diagnostics_ok = candidate.get("ic", 0.0) != 0.0 and bool(candidate.get("quantile_returns"))
-    if improves_return and improves_drawdown and turnover_ok and diagnostics_ok:
+    enough_periods = _has_minimum_research_periods(candidate)
+    if improves_return and improves_drawdown and turnover_ok and diagnostics_ok and enough_periods:
         return "adopt"
     if diagnostics_ok:
         return "continue"

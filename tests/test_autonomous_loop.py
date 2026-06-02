@@ -20,6 +20,15 @@ def test_pareto_decision_rejects_single_metric_without_diagnostics():
     assert decision == "defer"
 
 
+def test_pareto_decision_requires_minimum_research_periods_for_adoption():
+    baseline = {"net_return_after_funding": 0.01, "max_drawdown": -0.1, "turnover": 1.0, "ic": 0.1, "quantile_returns": {"q1": 0.0}, "periods": 12}
+    strong_but_sparse = {"net_return_after_funding": 0.02, "max_drawdown": -0.05, "turnover": 1.0, "ic": 0.2, "quantile_returns": {"q1": 0.0}, "periods": 3}
+    robust = {**strong_but_sparse, "periods": 12}
+
+    assert pareto_decision(strong_but_sparse, baseline) == "continue"
+    assert pareto_decision(robust, baseline) == "adopt"
+
+
 def test_config_diff_records_before_after_values():
     diff = config_diff({"run_id": "base", "factors": ["momentum"]}, {"run_id": "variant", "factors": ["momentum", "volatility"]})
     assert diff["run_id"] == {"before": "base", "after": "variant"}
@@ -142,8 +151,8 @@ def test_dry_iteration_writes_required_ledger_fields(tmp_path: Path):
     result = run_dry_iteration(
         tmp_path / "ledger.jsonl",
         {"run_id": "base", "factors": ["momentum"], "interval": "1h"},
-        {"net_return_after_funding": 0.01, "max_drawdown": -0.1, "turnover": 1.0, "ic": 0.1, "quantile_returns": {"q1": 0.0}},
-        {"net_return_after_funding": 0.02, "max_drawdown": -0.05, "turnover": 1.0, "ic": 0.2, "quantile_returns": {"q1": 0.0, "q3": 0.01}},
+        {"net_return_after_funding": 0.01, "max_drawdown": -0.1, "turnover": 1.0, "ic": 0.1, "quantile_returns": {"q1": 0.0}, "periods": 12},
+        {"net_return_after_funding": 0.02, "max_drawdown": -0.05, "turnover": 1.0, "ic": 0.2, "quantile_returns": {"q1": 0.0, "q3": 0.01}, "periods": 12},
         "volatility improves robustness",
         artifact_ids={
             "raw_data_snapshot_ids": ["raw1"],
@@ -172,11 +181,11 @@ def test_autonomous_config_loop_records_repeated_artifact_provenance(tmp_path: P
     results = run_autonomous_config_loop(
         ledger,
         {"run_id": "base", "factors": ["momentum"], "interval": "1h"},
-        {"net_return_after_funding": 0.01, "max_drawdown": -0.1, "turnover": 1.0, "ic": 0.1, "quantile_returns": {"q1": 0.0}},
+        {"net_return_after_funding": 0.01, "max_drawdown": -0.1, "turnover": 1.0, "ic": 0.1, "quantile_returns": {"q1": 0.0}, "periods": 12},
         [
             {
                 "hypothesis": "add volatility improves risk",
-                "metrics": {"net_return_after_funding": 0.02, "max_drawdown": -0.05, "turnover": 1.0, "ic": 0.2, "quantile_returns": {"q1": 0.0}},
+                "metrics": {"net_return_after_funding": 0.02, "max_drawdown": -0.05, "turnover": 1.0, "ic": 0.2, "quantile_returns": {"q1": 0.0}, "periods": 12},
                 "artifact_ids": {"raw_data_snapshot_ids": ["raw-a"], "normalized_data_snapshot_ids": ["norm-a"], "feature_table_id": "ft-a", "model_artifact_id": "model-a", "signal_artifact_id": "sig-a"},
             },
             {

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from math import inf
 from statistics import mean, pstdev
 from typing import Any
 
@@ -81,10 +82,17 @@ def run_long_short(
             "skipped_spread_periods": skipped_spread,
         }
     cost = per_period_cost * len(net_returns)
+    positive_returns = [ret for ret in net_returns if ret > 0]
+    negative_returns = [ret for ret in net_returns if ret < 0]
+    gross_profit = sum(positive_returns)
+    gross_loss = abs(sum(negative_returns))
     return {
         "periods": len(net_returns),
         "gross_return": sum(gross_returns),
         "net_return": sum(net_returns),
+        "average_net_return": mean(net_returns),
+        "win_rate": len(positive_returns) / len(net_returns),
+        "profit_factor": (gross_profit / gross_loss if gross_loss else (inf if gross_profit > 0 else 0.0)),
         "volatility": pstdev(net_returns) if len(net_returns) > 1 else 0.0,
         "max_drawdown": max_drawdown(net_returns),
         "turnover": 2.0 * len(net_returns),
@@ -134,11 +142,14 @@ def run_signal_backtest(
         "periods": metrics["periods"],
         "turnover_per_period": metrics["turnover"] / metrics["periods"] if metrics["periods"] else 0.0,
         "has_multiple_periods": metrics["periods"] > 1,
+        "has_minimum_research_periods": metrics["periods"] >= 12,
     }
     metrics["robustness_flags"] = {
         "cost_survives": metrics["net_return_after_funding"] > 0,
         "has_quantiles": bool(metrics["quantile_returns"]),
         "has_ic": metrics["ic"] != 0.0,
+        "has_minimum_research_periods": metrics["periods"] >= 12,
+        "positive_win_rate": metrics.get("win_rate", 0.0) > 0.5,
         "model_signal_source": metrics["model_id"] != "unknown",
     }
     return metrics
@@ -184,5 +195,7 @@ def research_diagnostics(rows: list[dict[str, Any]], factor: str, fee_bps: float
         "cost_survives": ls["net_return_after_funding"] > 0,
         "has_quantiles": bool(ls["quantile_returns"]),
         "has_ic": ls["ic"] != 0.0,
+        "has_minimum_research_periods": ls["periods"] >= 12,
+        "positive_win_rate": ls.get("win_rate", 0.0) > 0.5,
     }
     return ls

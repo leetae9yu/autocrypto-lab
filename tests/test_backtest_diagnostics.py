@@ -44,6 +44,10 @@ def test_signal_backtest_requires_model_signal_scores():
     assert "ic" in metrics
     assert "quantile_returns" in metrics
     assert "stability" in metrics
+    assert "win_rate" in metrics
+    assert "profit_factor" in metrics
+    assert "has_minimum_research_periods" in metrics["stability"]
+    assert "positive_win_rate" in metrics["robustness_flags"]
     assert metrics["robustness_flags"]["model_signal_source"] is True
 
 
@@ -88,6 +92,9 @@ def test_signal_backtest_can_reduce_turnover_with_rebalance_periods():
     assert sparse["periods"] < every_period["periods"]
     assert sparse["turnover"] < every_period["turnover"]
     assert sparse["cost"] < every_period["cost"]
+    assert "win_rate" in every_period
+    assert "average_net_return" in every_period
+    assert "profit_factor" in every_period
 
 
 def test_signal_backtest_can_skip_weak_score_spreads():
